@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dku-hack2026.local/schemas/risk-event.schema.json",
+  "title": "RiskEvent",
+  "type": "object",
+  "required": [
+    "event_id",
+    "timestamp",
+    "risk_level",
+    "why_flagged",
+    "recommended_action",
+    "consent_state",
+    "channel_type"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["R1", "R2", "R3"]
+    },
+    "why_flagged": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "recommended_action": {
+      "type": "string",
+      "minLength": 3
+    },
+    "consent_state": {
+      "type": "string",
+      "enum": ["granted", "revoked", "not_granted"]
+    },
+    "channel_type": {
+      "type": "string",
+      "enum": ["work", "finance", "mixed"]
+    },
+    "why_recommended": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "cost_snapshot": {
+      "type": "object",
+      "properties": {
+        "apr": { "type": "number" },
+        "principal": { "type": "number" },
+        "months": { "type": "number" },
+        "estimated_monthly_payment": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
