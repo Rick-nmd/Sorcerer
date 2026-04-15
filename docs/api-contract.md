@@ -55,9 +55,36 @@ Query params:
 - `page`
 - `page_size`
 
+Response shape:
+
+```json
+{
+  "trace_id": "trace_x",
+  "success": true,
+  "message": "OK",
+  "data": {
+    "items": [],
+    "total": 0,
+    "page": 1,
+    "page_size": 50
+  },
+  "error_code": null
+}
+```
+
 ### `GET /api/risk-events/export.csv`
 
 Purpose: export evidence chain for demo/defense.
+
+CSV columns:
+
+- `event_id`
+- `timestamp`
+- `risk_level`
+- `channel_type`
+- `consent_state`
+- `why_flagged`
+- `why_recommended`
 
 ### `GET /api/channels/work-study`
 
@@ -72,3 +99,20 @@ For MVP+:
 - one semi-real upstream path (if available)
 - fallback to mock with `data_source=mock`
 - upstream failure code: `UPSTREAM_UNAVAILABLE`
+
+Example error-tolerant response:
+
+```json
+{
+  "trace_id": "trace_x",
+  "success": true,
+  "message": "Upstream unavailable, fallback to mock: ...",
+  "data": [
+    {
+      "recommendation_id": "finance_mock_001",
+      "data_source": "mock"
+    }
+  ],
+  "error_code": "UPSTREAM_UNAVAILABLE"
+}
+```
