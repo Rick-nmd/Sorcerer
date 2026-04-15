@@ -61,8 +61,8 @@ button:hover {
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 6px 12px;
 }
 
 .actions {
@@ -79,6 +79,11 @@ button:hover {
   padding: 10px;
   border-radius: 6px;
   background: #f3f4f6;
+}
+
+.muted ul {
+  margin: 8px 0 0 16px;
+  padding: 0;
 }
 
 pre {

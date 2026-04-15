@@ -116,3 +116,21 @@ Example error-tolerant response:
   "error_code": "UPSTREAM_UNAVAILABLE"
 }
 ```
+
+### `POST /api/consent-events`
+
+Purpose: record consent-state updates for audit visibility (demo mode).
+
+Request fields:
+
+- `consent_state` (`granted|revoked|not_granted`)
+- `actor` (optional, default `student`)
+- `note` (optional)
+
+### `GET /api/consent-events`
+
+Purpose: retrieve recent consent audit records.
+
+Query params:
+
+- `limit` (default `50`, max `500`)

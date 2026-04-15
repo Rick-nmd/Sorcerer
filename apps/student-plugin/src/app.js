@@ -8,14 +8,21 @@ const ui = {
   saveApiBaseUrl: document.getElementById("saveApiBaseUrl"),
   scenarioText: document.getElementById("scenarioText"),
   apr: document.getElementById("apr"),
+  principal: document.getElementById("principal"),
+  months: document.getElementById("months"),
   stage: document.getElementById("stage"),
   consent: document.getElementById("consent"),
+  selfCheckNeed: document.getElementById("selfCheckNeed"),
+  selfCheckRepay: document.getElementById("selfCheckRepay"),
+  selfCheckAlt: document.getElementById("selfCheckAlt"),
   analyzeBtn: document.getElementById("analyzeBtn"),
   uploadBtn: document.getElementById("uploadBtn"),
   interventionBanner: document.getElementById("interventionBanner"),
   cooldownPanel: document.getElementById("cooldownPanel"),
   cooldownSeconds: document.getElementById("cooldownSeconds"),
   riskOutput: document.getElementById("riskOutput"),
+  costOutput: document.getElementById("costOutput"),
+  explainOutput: document.getElementById("explainOutput"),
   recommendationOutput: document.getElementById("recommendationOutput"),
   uploadOutput: document.getElementById("uploadOutput")
 };
@@ -75,9 +82,78 @@ function getScenarioInput() {
   return {
     pageText: ui.scenarioText.value,
     apr: Number(ui.apr.value),
+    principal: Number(ui.principal.value),
+    months: Number(ui.months.value),
     stage: ui.stage.value,
+    self_check: {
+      urgent_need: ui.selfCheckNeed.value,
+      stable_repay_source: ui.selfCheckRepay.value,
+      tried_alternatives: ui.selfCheckAlt.value
+    },
     consent_state: ui.consent.value
   };
+}
+
+function calculateCostSnapshot({ apr, principal, months }) {
+  const monthRate = apr / 100 / 12;
+  const safePrincipal = Math.max(principal || 0, 0);
+  const safeMonths = Math.max(months || 1, 1);
+  let monthlyPayment = safePrincipal / safeMonths;
+
+  if (monthRate > 0) {
+    const factor = Math.pow(1 + monthRate, safeMonths);
+    monthlyPayment = (safePrincipal * monthRate * factor) / (factor - 1);
+  }
+
+  const totalRepayment = monthlyPayment * safeMonths;
+  const totalInterest = totalRepayment - safePrincipal;
+  const overdueOneMonthCost = monthlyPayment * 0.15;
+
+  return {
+    apr: Number(apr.toFixed(2)),
+    principal: safePrincipal,
+    months: safeMonths,
+    estimated_monthly_payment: Number(monthlyPayment.toFixed(2)),
+    estimated_total_repayment: Number(totalRepayment.toFixed(2)),
+    estimated_total_interest: Number(totalInterest.toFixed(2)),
+    overdue_one_month_extra: Number(overdueOneMonthCost.toFixed(2))
+  };
+}
+
+function getSelfCheckRiskNotes(selfCheck) {
+  const notes = [];
+  if (selfCheck.urgent_need === "yes") {
+    notes.push("User reports urgent need, impulsive borrowing risk may increase.");
+  }
+  if (selfCheck.stable_repay_source === "no") {
+    notes.push("No stable repayment source reported.");
+  }
+  if (selfCheck.tried_alternatives === "no") {
+    notes.push("Alternative options not tried yet.");
+  }
+  return notes;
+}
+
+function renderCostOutput(costSnapshot) {
+  ui.costOutput.innerHTML = `
+    <strong>Estimated Monthly Payment:</strong> CNY ${costSnapshot.estimated_monthly_payment}<br/>
+    <strong>Estimated Total Repayment:</strong> CNY ${costSnapshot.estimated_total_repayment}<br/>
+    <strong>Total Interest Cost:</strong> CNY ${costSnapshot.estimated_total_interest}<br/>
+    <strong>Overdue (1 month) Extra Cost (est.):</strong> CNY ${costSnapshot.overdue_one_month_extra}
+  `;
+}
+
+function renderExplainability({ analysis, selfCheckNotes, costSnapshot }) {
+  const notes = [
+    ...analysis.why_flagged,
+    ...selfCheckNotes,
+    `APR ${costSnapshot.apr}% with ${costSnapshot.months} months repayment creates total repayment CNY ${costSnapshot.estimated_total_repayment}.`
+  ];
+
+  ui.explainOutput.innerHTML = `
+    <strong>Why this risk level:</strong>
+    <ul>${notes.map((note) => `<li>${note}</li>`).join("")}</ul>
+  `;
 }
 
 function buildEventPayload() {
@@ -85,21 +161,20 @@ function buildEventPayload() {
     return null;
   }
 
+  const scenario = getScenarioInput();
+  const costSnapshot = calculateCostSnapshot(scenario);
+  const selfCheckNotes = getSelfCheckRiskNotes(scenario.self_check);
+
   return {
     event_id: createEventId(),
     timestamp: new Date().toISOString(),
     risk_level: latestAnalysis.risk_level,
-    why_flagged: latestAnalysis.why_flagged,
+    why_flagged: [...latestAnalysis.why_flagged, ...selfCheckNotes],
     recommended_action: latestAnalysis.recommended_action,
     consent_state: ui.consent.value,
     channel_type: latestAnalysis.channel_type,
     why_recommended: latestRecommendations.flatMap((item) => item.why_recommended),
-    cost_snapshot: {
-      apr: Number(ui.apr.value),
-      principal: 5000,
-      months: 12,
-      estimated_monthly_payment: Number((5000 / 12).toFixed(2))
-    }
+    cost_snapshot: costSnapshot
   };
 }
 
@@ -133,6 +208,8 @@ function initialize() {
   ui.analyzeBtn.addEventListener("click", async () => {
     const scenario = getScenarioInput();
     latestAnalysis = analyzeRisk(scenario);
+    const costSnapshot = calculateCostSnapshot(scenario);
+    const selfCheckNotes = getSelfCheckRiskNotes(scenario.self_check);
 
     try {
       const remoteRecommendations = await fetchChannelRecommendations({
@@ -153,6 +230,8 @@ function initialize() {
     }
 
     ui.riskOutput.textContent = JSON.stringify(latestAnalysis, null, 2);
+    renderCostOutput(costSnapshot);
+    renderExplainability({ analysis: latestAnalysis, selfCheckNotes, costSnapshot });
     renderRecommendations(latestRecommendations);
     updateInterventionBanner(latestAnalysis.risk_level);
     ui.uploadOutput.textContent = `Recommendation source: ${latestRecommendationSource}`;

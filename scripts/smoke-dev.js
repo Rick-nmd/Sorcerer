@@ -69,6 +69,20 @@ async function main() {
   assert(finance.response.ok && finance.json.success, "Finance endpoint failed");
   console.log("[smoke] Channel endpoint checks passed");
 
+  const consentWrite = await requestJson(`${baseUrl}/api/consent-events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      consent_state: "revoked",
+      actor: "student",
+      note: "smoke-check"
+    })
+  });
+  assert(consentWrite.response.ok && consentWrite.json.success, "Consent audit write failed");
+  const consentRead = await requestJson(`${baseUrl}/api/consent-events?limit=5`);
+  assert(consentRead.response.ok && consentRead.json.success, "Consent audit read failed");
+  console.log("[smoke] Consent audit endpoint checks passed");
+
   console.log("[smoke] All checks passed.");
 }
 

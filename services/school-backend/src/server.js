@@ -7,6 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 const riskEvents = [];
+const consentAuditEvents = [];
 const VALID_LEVELS = ["R1", "R2", "R3"];
 const VALID_CONSENT = ["granted", "revoked", "not_granted"];
 const VALID_CHANNELS = ["work", "finance", "mixed"];
@@ -240,6 +241,37 @@ app.get("/api/channels/finance", async (_req, res) => {
       )
     );
   }
+});
+
+app.post("/api/consent-events", (req, res) => {
+  const payload = req.body || {};
+  const consentState = payload.consent_state;
+  if (!consentState || !VALID_CONSENT.includes(consentState)) {
+    return res.status(400).json(buildEnvelope(false, "Invalid consent state", null, "INVALID_SCHEMA"));
+  }
+
+  const event = {
+    consent_event_id: `consent_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    timestamp: new Date().toISOString(),
+    actor: payload.actor || "student",
+    consent_state: consentState,
+    note: payload.note || ""
+  };
+
+  consentAuditEvents.push(event);
+  return res.status(201).json(buildEnvelope(true, "Consent event recorded", event));
+});
+
+app.get("/api/consent-events", (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 500);
+  const items = consentAuditEvents.slice(-limit).reverse();
+  return res.json(
+    buildEnvelope(true, "OK", {
+      items,
+      total: consentAuditEvents.length,
+      limit
+    })
+  );
 });
 
 const port = process.env.PORT || 8787;
