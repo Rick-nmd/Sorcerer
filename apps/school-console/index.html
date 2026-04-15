@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>School Risk Console</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>School Risk Console (B-Machine)</h1>
+
+      <section class="card">
+        <h2>Filters</h2>
+        <div class="filters">
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
+
+          <label for="riskLevel">Risk Level</label>
+          <select id="riskLevel">
+            <option value="">All</option>
+            <option value="R1">R1</option>
+            <option value="R2">R2</option>
+            <option value="R3">R3</option>
+          </select>
+
+          <label for="channelType">Channel Type</label>
+          <select id="channelType">
+            <option value="">All</option>
+            <option value="work">work</option>
+            <option value="finance">finance</option>
+            <option value="mixed">mixed</option>
+          </select>
+
+          <label for="fromDate">From</label>
+          <input id="fromDate" type="datetime-local" />
+
+          <label for="toDate">To</label>
+          <input id="toDate" type="datetime-local" />
+        </div>
+        <div class="actions">
+          <button id="refreshBtn">Refresh</button>
+          <button id="exportBtn">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Events</h2>
+        <div id="meta">No data loaded yet.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Timestamp</th>
+              <th>Risk</th>
+              <th>Channel</th>
+              <th>Consent</th>
+              <th>Why Flagged</th>
+              <th>Why Recommended</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
