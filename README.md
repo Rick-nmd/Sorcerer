@@ -25,6 +25,7 @@ This repository contains the MVP+ implementation plan and starter project struct
 - Contract-first: freeze schema and API before feature coding
 
 Detailed workflow: `docs/dual-machine-workflow.md`
+Release checklist: `docs/release-readiness.md`
 
 ## Quick Start
 

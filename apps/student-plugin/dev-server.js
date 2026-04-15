@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 
 const app = express();
-const port = process.env.A_PLUGIN_PORT || 5173;
+const port = Number(process.env.A_PLUGIN_PORT || process.env.PORT || 5173);
 
 app.use(express.static(path.resolve(__dirname)));
 
