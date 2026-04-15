@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Plugin Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Student Risk Intervention Demo</h1>
+        <p>
+          A-machine sandbox for risk detection, explainable intervention, and
+          event upload.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>Environment</h2>
+        <label for="apiBaseUrl">API_BASE_URL</label>
+        <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
+        <button id="saveApiBaseUrl">Save API Base URL</button>
+      </section>
+
+      <section class="card">
+        <h2>Scenario Input</h2>
+        <div class="grid">
+          <label for="scenarioText">Page Text</label>
+          <textarea
+            id="scenarioText"
+            rows="6"
+            placeholder="Paste page text, CTA, and marketing copy..."
+          ></textarea>
+
+          <label for="apr">APR (%)</label>
+          <input id="apr" type="number" min="0" step="0.1" value="18.0" />
+
+          <label for="stage">User Stage</label>
+          <select id="stage">
+            <option value="browse">Browse only</option>
+            <option value="fill">Fill form</option>
+            <option value="submit">Submit application</option>
+          </select>
+
+          <label for="consent">Consent State</label>
+          <select id="consent">
+            <option value="granted">granted</option>
+            <option value="not_granted">not_granted</option>
+            <option value="revoked">revoked</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button id="analyzeBtn">Analyze Risk</button>
+          <button id="uploadBtn">Upload Event</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Intervention</h2>
+        <div id="interventionBanner" class="muted">
+          Analyze a scenario to generate intervention details.
+        </div>
+        <div id="cooldownPanel" class="hidden">
+          Cooldown active: <strong id="cooldownSeconds">15</strong>s
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Risk Result</h2>
+        <pre id="riskOutput">No analysis yet.</pre>
+      </section>
+
+      <section class="card">
+        <h2>Alternative Channels</h2>
+        <div id="recommendationOutput" class="recommendations">
+          No recommendation yet.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Upload Result</h2>
+        <pre id="uploadOutput">No upload attempt yet.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

@@ -25,6 +25,14 @@ Required fields:
 - `recommended_action`
 - `consent_state` (`granted|revoked|not_granted`)
 - `channel_type` (`work|finance|mixed`)
+- `why_recommended` (array of recommendation reasons)
+
+Optional fields:
+
+- `cost_snapshot.apr`
+- `cost_snapshot.principal`
+- `cost_snapshot.months`
+- `cost_snapshot.estimated_monthly_payment`
 
 Validation failure:
 
