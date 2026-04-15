@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dku-hack2026.local/schemas/recommendation.schema.json",
+  "title": "Recommendation",
+  "type": "object",
+  "required": [
+    "recommendation_id",
+    "risk_level",
+    "channel_type",
+    "title",
+    "next_action",
+    "why_recommended"
+  ],
+  "properties": {
+    "recommendation_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["R1", "R2", "R3"]
+    },
+    "channel_type": {
+      "type": "string",
+      "enum": ["work", "finance", "mixed"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "provider_name": {
+      "type": "string"
+    },
+    "apr": {
+      "type": ["number", "null"]
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 3
+    },
+    "why_recommended": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "data_source": {
+      "type": "string",
+      "enum": ["live", "mock"],
+      "default": "mock"
+    }
+  },
+  "additionalProperties": false
+}
