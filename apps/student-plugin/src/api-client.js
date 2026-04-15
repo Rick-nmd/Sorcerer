@@ -14,6 +14,22 @@ export async function uploadRiskEvent({ apiBaseUrl, eventPayload }) {
   };
 }
 
+export async function uploadConsentEvent({ apiBaseUrl, consentPayload }) {
+  const url = `${apiBaseUrl.replace(/\/$/, "")}/api/consent-events`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(consentPayload)
+  });
+
+  const json = await response.json();
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: json
+  };
+}
+
 async function getJson(url) {
   const response = await fetch(url);
   const json = await response.json();

@@ -28,6 +28,7 @@ From repository root:
 - Keep payload fields aligned with `contracts/schemas/risk-event.schema.json`.
 - Analyze flow now prefers backend recommendation channels (`/api/channels/*`) and
   falls back to local recommendations if backend is unavailable.
+- Student UI can manually sync consent changes via `Sync Consent Event` button.
 
 ## Validation Checklist
 

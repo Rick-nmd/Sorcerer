@@ -20,7 +20,12 @@
         <h2>Environment</h2>
         <label for="apiBaseUrl">API_BASE_URL</label>
         <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
-        <button id="saveApiBaseUrl">Save API Base URL</button>
+        <label for="consentNote">Consent Note (optional)</label>
+        <input id="consentNote" type="text" placeholder="e.g. user changed consent in UI" />
+        <div class="actions">
+          <button id="saveApiBaseUrl">Save API Base URL</button>
+          <button id="syncConsentBtn">Sync Consent Event</button>
+        </div>
       </section>
 
       <section class="card">

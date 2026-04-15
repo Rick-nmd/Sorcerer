@@ -87,6 +87,18 @@ async function main() {
   assert(consentRead.response.ok && consentRead.json.success, "Consent audit read failed");
   console.log("[smoke] Consent audit endpoint checks passed");
 
+  const seed = await requestJson(`${baseUrl}/api/demo/seed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
+  assert(seed.response.ok && seed.json.success, "Demo seed endpoint failed");
+  const reset = await requestJson(`${baseUrl}/api/demo/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
+  assert(reset.response.ok && reset.json.success, "Demo reset endpoint failed");
+  console.log("[smoke] Demo seed/reset endpoint checks passed");
+
   console.log("[smoke] All checks passed.");
 }
 

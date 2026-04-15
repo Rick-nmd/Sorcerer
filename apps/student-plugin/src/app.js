@@ -1,11 +1,13 @@
 import { getApiBaseUrl, setApiBaseUrl } from "./config.js";
 import { analyzeRisk } from "./risk-engine.js";
 import { buildRecommendations, normalizeRemoteRecommendations } from "./recommendation-engine.js";
-import { fetchChannelRecommendations, uploadRiskEvent } from "./api-client.js";
+import { fetchChannelRecommendations, uploadConsentEvent, uploadRiskEvent } from "./api-client.js";
 
 const ui = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),
+  consentNote: document.getElementById("consentNote"),
   saveApiBaseUrl: document.getElementById("saveApiBaseUrl"),
+  syncConsentBtn: document.getElementById("syncConsentBtn"),
   scenarioText: document.getElementById("scenarioText"),
   apr: document.getElementById("apr"),
   principal: document.getElementById("principal"),
@@ -203,6 +205,22 @@ function initialize() {
   ui.saveApiBaseUrl.addEventListener("click", () => {
     setApiBaseUrl(ui.apiBaseUrl.value);
     ui.uploadOutput.textContent = `Saved API base URL: ${getApiBaseUrl()}`;
+  });
+
+  ui.syncConsentBtn.addEventListener("click", async () => {
+    try {
+      const result = await uploadConsentEvent({
+        apiBaseUrl: getApiBaseUrl(),
+        consentPayload: {
+          consent_state: ui.consent.value,
+          actor: "student",
+          note: ui.consentNote.value || ""
+        }
+      });
+      ui.uploadOutput.textContent = `Consent sync result:\n${JSON.stringify(result, null, 2)}`;
+    } catch (error) {
+      ui.uploadOutput.textContent = `Consent sync failed: ${error.message}`;
+    }
   });
 
   ui.analyzeBtn.addEventListener("click", async () => {

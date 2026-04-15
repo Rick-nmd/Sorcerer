@@ -8,6 +8,9 @@ const ui = {
   toDate: document.getElementById("toDate"),
   refreshBtn: document.getElementById("refreshBtn"),
   exportBtn: document.getElementById("exportBtn"),
+  seedDemoBtn: document.getElementById("seedDemoBtn"),
+  resetDemoBtn: document.getElementById("resetDemoBtn"),
+  autoRefresh: document.getElementById("autoRefresh"),
   meta: document.getElementById("meta"),
   eventsBody: document.getElementById("eventsBody"),
   totalEvents: document.getElementById("totalEvents"),
@@ -17,6 +20,7 @@ const ui = {
   consentMeta: document.getElementById("consentMeta"),
   consentBody: document.getElementById("consentBody")
 };
+let autoRefreshTimer = null;
 
 function getApiBaseUrl() {
   return localStorage.getItem(STORAGE_KEY) || "http://localhost:8787";
@@ -151,10 +155,62 @@ function exportCsv() {
   window.open(url, "_blank");
 }
 
+async function postJson(url) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
+  return response.json();
+}
+
+async function seedDemoData() {
+  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  setApiBaseUrl(baseUrl);
+  const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/seed`);
+  ui.meta.textContent = `Seeded demo data: ${result?.data?.risk_events ?? 0} risk events`;
+  await refreshEvents();
+}
+
+async function resetDemoData() {
+  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  setApiBaseUrl(baseUrl);
+  const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/reset`);
+  ui.meta.textContent = `Reset demo data: ${result?.data?.risk_events ?? 0} risk events`;
+  await refreshEvents();
+}
+
+function setAutoRefresh(enabled) {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+
+  if (enabled) {
+    autoRefreshTimer = setInterval(() => {
+      refreshEvents().catch(() => {
+        // keep timer alive even if one cycle fails
+      });
+    }, 8000);
+  }
+}
+
 function init() {
   ui.apiBaseUrl.value = getApiBaseUrl();
   ui.refreshBtn.addEventListener("click", refreshEvents);
   ui.exportBtn.addEventListener("click", exportCsv);
+  ui.seedDemoBtn.addEventListener("click", () => {
+    seedDemoData().catch((error) => {
+      ui.meta.textContent = `Seed failed: ${error.message}`;
+    });
+  });
+  ui.resetDemoBtn.addEventListener("click", () => {
+    resetDemoData().catch((error) => {
+      ui.meta.textContent = `Reset failed: ${error.message}`;
+    });
+  });
+  ui.autoRefresh.addEventListener("change", () => {
+    setAutoRefresh(ui.autoRefresh.checked);
+  });
   refreshEvents();
 }
 

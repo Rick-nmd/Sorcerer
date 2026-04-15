@@ -163,6 +163,25 @@ function buildRiskSummary(items) {
   return summary;
 }
 
+function createDemoEvent({ id, level, channel, consent, reasons, recommendations, offsetMinutes }) {
+  return {
+    event_id: id,
+    timestamp: new Date(Date.now() - offsetMinutes * 60 * 1000).toISOString(),
+    risk_level: level,
+    why_flagged: reasons,
+    recommended_action: "Review alternatives before loan application.",
+    consent_state: consent,
+    channel_type: channel,
+    why_recommended: recommendations,
+    cost_snapshot: {
+      apr: level === "R3" ? 42 : level === "R2" ? 26 : 12,
+      principal: 5000,
+      months: 12,
+      estimated_monthly_payment: level === "R3" ? 521.6 : 477.3
+    }
+  };
+}
+
 app.use("/console", express.static(path.resolve(__dirname, "../../../apps/school-console")));
 
 app.get("/health", (_req, res) => {
@@ -299,6 +318,72 @@ app.get("/api/consent-events", (req, res) => {
       limit
     })
   );
+});
+
+app.post("/api/demo/seed", (_req, res) => {
+  riskEvents.length = 0;
+  consentAuditEvents.length = 0;
+
+  const seededEvents = [
+    createDemoEvent({
+      id: "demo_r1_001",
+      level: "R1",
+      channel: "work",
+      consent: "granted",
+      reasons: ["Browsing low-intensity loan-related page."],
+      recommendations: ["Campus work-study listing reduces borrowing pressure."],
+      offsetMinutes: 25
+    }),
+    createDemoEvent({
+      id: "demo_r2_001",
+      level: "R2",
+      channel: "mixed",
+      consent: "granted",
+      reasons: ["Fill stage reached with marketing-risk phrases."],
+      recommendations: ["Work-first approach recommended.", "Use regulated finance option only if needed."],
+      offsetMinutes: 18
+    }),
+    createDemoEvent({
+      id: "demo_r3_001",
+      level: "R3",
+      channel: "mixed",
+      consent: "granted",
+      reasons: ["Submit stage with high APR and potential scam wording."],
+      recommendations: ["Pause immediately.", "Contact support and use regulated channel."],
+      offsetMinutes: 10
+    })
+  ];
+  riskEvents.push(...seededEvents);
+
+  consentAuditEvents.push(
+    {
+      consent_event_id: `consent_seed_${Date.now()}_1`,
+      timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+      actor: "student",
+      consent_state: "granted",
+      note: "Seeded demo consent grant."
+    },
+    {
+      consent_event_id: `consent_seed_${Date.now()}_2`,
+      timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+      actor: "student",
+      consent_state: "revoked",
+      note: "Seeded demo consent revoke."
+    }
+  );
+
+  return res.json(
+    buildEnvelope(true, "Demo data seeded", {
+      risk_events: riskEvents.length,
+      consent_events: consentAuditEvents.length
+    })
+  );
+});
+
+app.post("/api/demo/reset", (_req, res) => {
+  riskEvents.length = 0;
+  consentAuditEvents.length = 0;
+  return res.json(buildEnvelope(true, "Demo data reset", { risk_events: 0, consent_events: 0 }));
 });
 
 const port = process.env.PORT || 8787;

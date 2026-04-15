@@ -145,3 +145,11 @@ Purpose: retrieve recent consent audit records.
 Query params:
 
 - `limit` (default `50`, max `500`)
+
+### `POST /api/demo/seed`
+
+Purpose: seed demonstration data for risk events and consent audit logs.
+
+### `POST /api/demo/reset`
+
+Purpose: clear demonstration data for a clean replay.

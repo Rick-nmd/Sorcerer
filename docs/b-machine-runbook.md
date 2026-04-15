@@ -56,6 +56,13 @@ curl "http://localhost:8787/api/channels/work-study"
 curl "http://localhost:8787/api/channels/finance"
 ```
 
+### 6) Seed and reset demo data
+
+```bash
+curl -X POST "http://localhost:8787/api/demo/seed"
+curl -X POST "http://localhost:8787/api/demo/reset"
+```
+
 ## A/B Collaboration Notes
 
 - A-machine plugin should point `API_BASE_URL` to B-machine backend URL.

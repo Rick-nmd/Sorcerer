@@ -76,6 +76,19 @@ button {
   margin-top: 8px;
 }
 
+.inline-checkbox {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.inline-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
 button {
   background: #2563eb;
   color: white;
