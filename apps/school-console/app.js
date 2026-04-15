@@ -108,27 +108,38 @@ async function refreshEvents() {
   const query = buildQueryString();
   const url = `${baseUrl.replace(/\/$/, "")}/api/risk-events${query ? `?${query}` : ""}`;
 
-  try {
-    const [eventResponse, summaryResponse, consentResponse] = await Promise.all([
-      fetch(url),
-      fetch(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`),
-      fetch(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`)
-    ]);
-    const result = await eventResponse.json();
-    const summaryResult = await summaryResponse.json();
-    const consentResult = await consentResponse.json();
+  const [eventsCall, summaryCall, consentCall] = await Promise.allSettled([
+    fetch(url).then((resp) => resp.json()),
+    fetch(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`).then((resp) => resp.json()),
+    fetch(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`).then((resp) => resp.json())
+  ]);
+
+  if (eventsCall.status === "fulfilled") {
+    const result = eventsCall.value;
     const items = result?.data?.items || [];
-    const summary = summaryResult?.data;
-    const consentItems = consentResult?.data?.items || [];
     renderRows(items);
-    renderSummary(summary);
-    renderConsentRows(consentItems);
     ui.meta.textContent = `Loaded ${items.length} / total ${result?.data?.total ?? 0} item(s).`;
-    ui.consentMeta.textContent = `Loaded ${consentItems.length} / total ${consentResult?.data?.total ?? 0} consent event(s).`;
-  } catch (error) {
-    ui.meta.textContent = `Request failed: ${error.message}`;
+  } else {
+    ui.meta.textContent = `Event request failed: ${eventsCall.reason?.message || "unknown error"}`;
     ui.eventsBody.innerHTML = `<tr><td colspan="7">Unable to load events.</td></tr>`;
-    ui.consentMeta.textContent = `Request failed: ${error.message}`;
+  }
+
+  if (summaryCall.status === "fulfilled") {
+    renderSummary(summaryCall.value?.data);
+  } else {
+    ui.totalEvents.textContent = "-";
+    ui.riskSummary.textContent = "unavailable";
+    ui.channelSummary.textContent = "unavailable";
+    ui.consentSummary.textContent = "unavailable";
+  }
+
+  if (consentCall.status === "fulfilled") {
+    const consentResult = consentCall.value;
+    const consentItems = consentResult?.data?.items || [];
+    renderConsentRows(consentItems);
+    ui.consentMeta.textContent = `Loaded ${consentItems.length} / total ${consentResult?.data?.total ?? 0} consent event(s).`;
+  } else {
+    ui.consentMeta.textContent = `Consent request failed: ${consentCall.reason?.message || "unknown error"}`;
     ui.consentBody.innerHTML = `<tr><td colspan="5">Unable to load consent events.</td></tr>`;
   }
 }
