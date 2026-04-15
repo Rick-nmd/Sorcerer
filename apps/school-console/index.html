@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>School Console - Risk Events</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>School Console (MVP)</h1>
+      <p class="hint">
+        API Base:
+        <code id="api-base-label"></code>
+      </p>
+
+      <section class="toolbar">
+        <label for="risk-level">Risk Level:</label>
+        <select id="risk-level">
+          <option value="">All</option>
+          <option value="R1">R1</option>
+          <option value="R2">R2</option>
+          <option value="R3">R3</option>
+        </select>
+        <button id="refresh-btn" type="button">Refresh</button>
+        <button id="export-btn" type="button">Export CSV</button>
+      </section>
+
+      <section>
+        <table>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Timestamp</th>
+              <th>Risk</th>
+              <th>Channel</th>
+              <th>Consent</th>
+              <th>Why Flagged</th>
+              <th>Why Recommended</th>
+            </tr>
+          </thead>
+          <tbody id="events-body"></tbody>
+        </table>
+      </section>
+      <p id="status-text"></p>
+    </main>
+    <script src="./main.js"></script>
+  </body>
+  </html>
