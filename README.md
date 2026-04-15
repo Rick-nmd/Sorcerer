@@ -37,6 +37,8 @@ Release checklist: `docs/release-readiness.md`
    - `npm run start`
 4. Start A-machine student demo:
    - `npm run start:a`
+5. Run integrated smoke checks:
+   - `npm run smoke:dev`
 
 ## Scope
 

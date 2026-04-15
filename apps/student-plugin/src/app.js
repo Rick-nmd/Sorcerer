@@ -1,7 +1,7 @@
 import { getApiBaseUrl, setApiBaseUrl } from "./config.js";
 import { analyzeRisk } from "./risk-engine.js";
-import { buildRecommendations } from "./recommendation-engine.js";
-import { uploadRiskEvent } from "./api-client.js";
+import { buildRecommendations, normalizeRemoteRecommendations } from "./recommendation-engine.js";
+import { fetchChannelRecommendations, uploadRiskEvent } from "./api-client.js";
 
 const ui = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),
@@ -23,6 +23,7 @@ const ui = {
 let latestAnalysis = null;
 let latestRecommendations = [];
 let cooldownTimer = null;
+let latestRecommendationSource = "local";
 
 function createEventId() {
   return `event_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -43,6 +44,7 @@ function renderRecommendations(recommendations) {
         <p><strong>Provider:</strong> ${item.provider_name}</p>
         <p><strong>Next Action:</strong> ${item.next_action}</p>
         <p><strong>Why Recommended:</strong> ${item.why_recommended.join("; ")}</p>
+        <p><strong>Data Source:</strong> ${item.data_source || "local"}</p>
       </article>
     `
     )
@@ -128,17 +130,32 @@ function initialize() {
     ui.uploadOutput.textContent = `Saved API base URL: ${getApiBaseUrl()}`;
   });
 
-  ui.analyzeBtn.addEventListener("click", () => {
+  ui.analyzeBtn.addEventListener("click", async () => {
     const scenario = getScenarioInput();
     latestAnalysis = analyzeRisk(scenario);
-    latestRecommendations = buildRecommendations({
-      riskLevel: latestAnalysis.risk_level,
-      apr: scenario.apr
-    });
+
+    try {
+      const remoteRecommendations = await fetchChannelRecommendations({
+        apiBaseUrl: getApiBaseUrl(),
+        riskLevel: latestAnalysis.risk_level
+      });
+      latestRecommendations = normalizeRemoteRecommendations({
+        riskLevel: latestAnalysis.risk_level,
+        recommendations: remoteRecommendations
+      });
+      latestRecommendationSource = "backend";
+    } catch (_error) {
+      latestRecommendations = buildRecommendations({
+        riskLevel: latestAnalysis.risk_level,
+        apr: scenario.apr
+      }).map((item) => ({ ...item, data_source: "local" }));
+      latestRecommendationSource = "local_fallback";
+    }
 
     ui.riskOutput.textContent = JSON.stringify(latestAnalysis, null, 2);
     renderRecommendations(latestRecommendations);
     updateInterventionBanner(latestAnalysis.risk_level);
+    ui.uploadOutput.textContent = `Recommendation source: ${latestRecommendationSource}`;
   });
 
   ui.uploadBtn.addEventListener("click", async () => {
@@ -153,7 +170,7 @@ function initialize() {
         apiBaseUrl: getApiBaseUrl(),
         eventPayload: payload
       });
-      ui.uploadOutput.textContent = JSON.stringify(result, null, 2);
+      ui.uploadOutput.textContent = `${JSON.stringify(result, null, 2)}\n\nRecommendation source: ${latestRecommendationSource}`;
     } catch (error) {
       ui.uploadOutput.textContent = `Upload failed: ${error.message}`;
     }

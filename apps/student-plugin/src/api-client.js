@@ -13,3 +13,28 @@ export async function uploadRiskEvent({ apiBaseUrl, eventPayload }) {
     body: json
   };
 }
+
+async function getJson(url) {
+  const response = await fetch(url);
+  const json = await response.json();
+  if (!response.ok || !json.success) {
+    const message = json?.message || `Request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+  return json.data || [];
+}
+
+export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel }) {
+  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+
+  if (riskLevel === "R1") {
+    const work = await getJson(`${baseUrl}/api/channels/work-study`);
+    return work;
+  }
+
+  const [work, finance] = await Promise.all([
+    getJson(`${baseUrl}/api/channels/work-study`),
+    getJson(`${baseUrl}/api/channels/finance`)
+  ]);
+  return [...work, ...finance];
+}

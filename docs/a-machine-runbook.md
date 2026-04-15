@@ -18,20 +18,25 @@ From repository root:
 
 1. `npm install`
 2. `npm run start` (starts backend on `http://localhost:8787`)
-3. Open `apps/student-plugin/index.html` in browser.
+3. `npm run start:a` (serves plugin demo at `http://localhost:5173`)
+4. Open `http://localhost:5173` in browser.
 
 ## Cross-Machine Collaboration
 
 - Set UI `API_BASE_URL` to B-machine backend URL, for example:
   - `http://192.168.1.20:8787`
 - Keep payload fields aligned with `contracts/schemas/risk-event.schema.json`.
+- Analyze flow now prefers backend recommendation channels (`/api/channels/*`) and
+  falls back to local recommendations if backend is unavailable.
 
 ## Validation Checklist
 
 - `Analyze Risk` generates `risk_level`, `why_flagged`, `recommended_action`.
 - R2/R3 triggers 15-second cooldown panel.
 - Recommendation cards include work + finance channels for R2/R3.
+- Recommendation cards show `Data Source` (`live`/`mock`/`local`).
 - `Upload Event` receives backend response with envelope fields.
+- `npm run smoke:dev` passes after backend startup.
 
 ## Example Event Payload
 

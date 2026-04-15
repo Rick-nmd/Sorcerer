@@ -40,3 +40,20 @@ export function buildRecommendations({ riskLevel, apr }) {
     buildFinanceRecommendation(riskLevel, apr)
   ];
 }
+
+export function normalizeRemoteRecommendations({ riskLevel, recommendations }) {
+  return (recommendations || []).map((item, index) => ({
+    recommendation_id: item.recommendation_id || `remote_${riskLevel}_${index}`,
+    risk_level: item.risk_level || riskLevel,
+    channel_type: item.channel_type || "mixed",
+    title: item.title || "Recommendation",
+    provider_name: item.provider_name || "Unknown provider",
+    apr: typeof item.apr === "number" ? item.apr : null,
+    next_action: item.next_action || "Review details before proceeding.",
+    why_recommended:
+      item.why_recommended && item.why_recommended.length
+        ? item.why_recommended
+        : ["Recommended by backend channel policy."],
+    data_source: item.data_source || "live"
+  }));
+}
