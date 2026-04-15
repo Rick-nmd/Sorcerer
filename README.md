@@ -26,6 +26,7 @@ This repository contains the MVP+ implementation plan and starter project struct
 
 Detailed workflow: `docs/dual-machine-workflow.md`
 Release checklist: `docs/release-readiness.md`
+Production roadmap: `docs/production-integration-roadmap.md`
 
 ## Quick Start
 

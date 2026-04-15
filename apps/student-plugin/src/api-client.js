@@ -1,8 +1,16 @@
-export async function uploadRiskEvent({ apiBaseUrl, eventPayload }) {
+function buildHeaders(apiKey) {
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) {
+    headers["x-api-key"] = apiKey;
+  }
+  return headers;
+}
+
+export async function uploadRiskEvent({ apiBaseUrl, eventPayload, apiKey = "" }) {
   const url = `${apiBaseUrl.replace(/\/$/, "")}/api/risk-events`;
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(apiKey),
     body: JSON.stringify(eventPayload)
   });
 
@@ -14,11 +22,11 @@ export async function uploadRiskEvent({ apiBaseUrl, eventPayload }) {
   };
 }
 
-export async function uploadConsentEvent({ apiBaseUrl, consentPayload }) {
+export async function uploadConsentEvent({ apiBaseUrl, consentPayload, apiKey = "" }) {
   const url = `${apiBaseUrl.replace(/\/$/, "")}/api/consent-events`;
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(apiKey),
     body: JSON.stringify(consentPayload)
   });
 
@@ -30,8 +38,10 @@ export async function uploadConsentEvent({ apiBaseUrl, consentPayload }) {
   };
 }
 
-async function getJson(url) {
-  const response = await fetch(url);
+async function getJson(url, apiKey = "") {
+  const response = await fetch(url, {
+    headers: apiKey ? { "x-api-key": apiKey } : {}
+  });
   const json = await response.json();
   if (!response.ok || !json.success) {
     const message = json?.message || `Request failed with status ${response.status}`;
@@ -40,17 +50,17 @@ async function getJson(url) {
   return json.data || [];
 }
 
-export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel }) {
+export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel, apiKey = "" }) {
   const baseUrl = apiBaseUrl.replace(/\/$/, "");
 
   if (riskLevel === "R1") {
-    const work = await getJson(`${baseUrl}/api/channels/work-study`);
+    const work = await getJson(`${baseUrl}/api/channels/work-study`, apiKey);
     return work;
   }
 
   const [work, finance] = await Promise.all([
-    getJson(`${baseUrl}/api/channels/work-study`),
-    getJson(`${baseUrl}/api/channels/finance`)
+    getJson(`${baseUrl}/api/channels/work-study`, apiKey),
+    getJson(`${baseUrl}/api/channels/finance`, apiKey)
   ]);
   return [...work, ...finance];
 }

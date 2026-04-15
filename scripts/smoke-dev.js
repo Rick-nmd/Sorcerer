@@ -1,5 +1,10 @@
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const apiKey = process.env.API_KEY || "";
+  const mergedHeaders = { ...(options.headers || {}) };
+  if (apiKey) {
+    mergedHeaders["x-api-key"] = apiKey;
+  }
+  const response = await fetch(url, { ...options, headers: mergedHeaders });
   const json = await response.json();
   return { response, json };
 }
@@ -63,7 +68,9 @@ async function main() {
   assert(summary.response.ok && summary.json.success, "Summary check failed");
   console.log("[smoke] Summary check passed");
 
-  const csvResponse = await fetch(`${baseUrl}/api/risk-events/export.csv`);
+  const csvResponse = await fetch(`${baseUrl}/api/risk-events/export.csv`, {
+    headers: process.env.API_KEY ? { "x-api-key": process.env.API_KEY } : {}
+  });
   assert(csvResponse.ok, "CSV export check failed");
   console.log("[smoke] CSV export check passed");
 

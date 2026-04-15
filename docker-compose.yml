@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  school-backend:
+    build: .
+    ports:
+      - "8787:8787"
+    env_file:
+      - .env
+    volumes:
+      - ./services/school-backend/data:/app/services/school-backend/data
+    restart: unless-stopped

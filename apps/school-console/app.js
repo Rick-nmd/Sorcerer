@@ -1,7 +1,9 @@
 const STORAGE_KEY = "school_console_api_base_url";
+const API_KEY_STORAGE_KEY = "school_console_api_key";
 
 const ui = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),
+  apiKey: document.getElementById("apiKey"),
   riskLevel: document.getElementById("riskLevel"),
   channelType: document.getElementById("channelType"),
   fromDate: document.getElementById("fromDate"),
@@ -28,6 +30,20 @@ function getApiBaseUrl() {
 
 function setApiBaseUrl(value) {
   localStorage.setItem(STORAGE_KEY, value.trim());
+}
+
+function getApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE_KEY) || "";
+}
+
+function setApiKey(value) {
+  localStorage.setItem(API_KEY_STORAGE_KEY, value.trim());
+}
+
+function authHeaders() {
+  const apiKey = ui.apiKey.value.trim();
+  if (!apiKey) return {};
+  return { "x-api-key": apiKey };
 }
 
 function isoFromInput(raw) {
@@ -108,14 +124,19 @@ function renderConsentRows(items) {
 async function refreshEvents() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
+  setApiKey(ui.apiKey.value);
 
   const query = buildQueryString();
   const url = `${baseUrl.replace(/\/$/, "")}/api/risk-events${query ? `?${query}` : ""}`;
 
   const [eventsCall, summaryCall, consentCall] = await Promise.allSettled([
-    fetch(url).then((resp) => resp.json()),
-    fetch(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`).then((resp) => resp.json()),
-    fetch(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`).then((resp) => resp.json())
+    fetch(url, { headers: authHeaders() }).then((resp) => resp.json()),
+    fetch(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`, { headers: authHeaders() }).then((resp) =>
+      resp.json()
+    ),
+    fetch(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`, { headers: authHeaders() }).then((resp) =>
+      resp.json()
+    )
   ]);
 
   if (eventsCall.status === "fulfilled") {
@@ -151,14 +172,28 @@ async function refreshEvents() {
 function exportCsv() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
+  setApiKey(ui.apiKey.value);
   const url = `${baseUrl.replace(/\/$/, "")}/api/risk-events/export.csv`;
-  window.open(url, "_blank");
+  fetch(url, { headers: authHeaders() })
+    .then((resp) => resp.text())
+    .then((text) => {
+      const blob = new Blob([text], { type: "text/csv" });
+      const objectUrl = URL.createObjectURL(blob);
+      window.open(objectUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+    })
+    .catch((error) => {
+      ui.meta.textContent = `CSV export failed: ${error.message}`;
+    });
 }
 
 async function postJson(url) {
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" }
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders()
+    }
   });
   return response.json();
 }
@@ -196,6 +231,7 @@ function setAutoRefresh(enabled) {
 
 function init() {
   ui.apiBaseUrl.value = getApiBaseUrl();
+  ui.apiKey.value = getApiKey();
   ui.refreshBtn.addEventListener("click", refreshEvents);
   ui.exportBtn.addEventListener("click", exportCsv);
   ui.seedDemoBtn.addEventListener("click", () => {

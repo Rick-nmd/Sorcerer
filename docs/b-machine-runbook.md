@@ -66,5 +66,6 @@ curl -X POST "http://localhost:8787/api/demo/reset"
 ## A/B Collaboration Notes
 
 - A-machine plugin should point `API_BASE_URL` to B-machine backend URL.
+- If API key auth is enabled, configure matching `x-api-key` in both student and console UIs.
 - Required payload fields must match `contracts/schemas/risk-event.schema.json`.
 - Use demo scripts in `docs/demo-scenarios.md` for R1/R2/R3 run-through.

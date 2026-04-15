@@ -1,10 +1,11 @@
-import { getApiBaseUrl, setApiBaseUrl } from "./config.js";
+import { getApiBaseUrl, getApiKey, setApiBaseUrl, setApiKey } from "./config.js";
 import { analyzeRisk } from "./risk-engine.js";
 import { buildRecommendations, normalizeRemoteRecommendations } from "./recommendation-engine.js";
 import { fetchChannelRecommendations, uploadConsentEvent, uploadRiskEvent } from "./api-client.js";
 
 const ui = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),
+  apiKey: document.getElementById("apiKey"),
   consentNote: document.getElementById("consentNote"),
   saveApiBaseUrl: document.getElementById("saveApiBaseUrl"),
   syncConsentBtn: document.getElementById("syncConsentBtn"),
@@ -201,9 +202,11 @@ function updateInterventionBanner(riskLevel) {
 
 function initialize() {
   ui.apiBaseUrl.value = getApiBaseUrl();
+  ui.apiKey.value = getApiKey();
 
   ui.saveApiBaseUrl.addEventListener("click", () => {
     setApiBaseUrl(ui.apiBaseUrl.value);
+    setApiKey(ui.apiKey.value);
     ui.uploadOutput.textContent = `Saved API base URL: ${getApiBaseUrl()}`;
   });
 
@@ -215,7 +218,8 @@ function initialize() {
           consent_state: ui.consent.value,
           actor: "student",
           note: ui.consentNote.value || ""
-        }
+        },
+        apiKey: getApiKey()
       });
       ui.uploadOutput.textContent = `Consent sync result:\n${JSON.stringify(result, null, 2)}`;
     } catch (error) {
@@ -232,7 +236,8 @@ function initialize() {
     try {
       const remoteRecommendations = await fetchChannelRecommendations({
         apiBaseUrl: getApiBaseUrl(),
-        riskLevel: latestAnalysis.risk_level
+        riskLevel: latestAnalysis.risk_level,
+        apiKey: getApiKey()
       });
       latestRecommendations = normalizeRemoteRecommendations({
         riskLevel: latestAnalysis.risk_level,
@@ -265,7 +270,8 @@ function initialize() {
     try {
       const result = await uploadRiskEvent({
         apiBaseUrl: getApiBaseUrl(),
-        eventPayload: payload
+        eventPayload: payload,
+        apiKey: getApiKey()
       });
       ui.uploadOutput.textContent = `${JSON.stringify(result, null, 2)}\n\nRecommendation source: ${latestRecommendationSource}`;
     } catch (error) {

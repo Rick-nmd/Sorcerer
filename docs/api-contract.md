@@ -3,6 +3,7 @@
 ## Base Rules
 
 - Base path: `/api`
+- In production mode, protected endpoints require `x-api-key`.
 - Response envelope:
   - `trace_id: string`
   - `success: boolean`
@@ -145,6 +146,34 @@ Purpose: retrieve recent consent audit records.
 Query params:
 
 - `limit` (default `50`, max `500`)
+
+### `GET /api/audit-events`
+
+Purpose: read append-only audit chain (admin only).
+
+### `POST /api/network/signals`
+
+Purpose: ingest campus network safety signals.
+
+### `GET /api/network/signals`
+
+Purpose: review recent network signal records.
+
+### `POST /api/integrations/providers/register`
+
+Purpose: register/update institution integration metadata.
+
+### `GET /api/integrations/providers`
+
+Purpose: list configured institution providers.
+
+### `POST /api/integrations/providers/:providerId/offers/sync`
+
+Purpose: sync institution offers from partner API.
+
+### `POST /api/integrations/providers/:providerId/webhooks/offers`
+
+Purpose: accept partner webhook offer updates.
 
 ### `POST /api/demo/seed`
 

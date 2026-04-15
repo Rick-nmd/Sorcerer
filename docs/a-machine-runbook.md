@@ -25,6 +25,7 @@ From repository root:
 
 - Set UI `API_BASE_URL` to B-machine backend URL, for example:
   - `http://192.168.1.20:8787`
+- If auth is enabled, set student UI API key to role-appropriate key.
 - Keep payload fields aligned with `contracts/schemas/risk-event.schema.json`.
 - Analyze flow now prefers backend recommendation channels (`/api/channels/*`) and
   falls back to local recommendations if backend is unavailable.
