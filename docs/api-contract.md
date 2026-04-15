@@ -86,6 +86,17 @@ CSV columns:
 - `why_flagged`
 - `why_recommended`
 
+### `GET /api/risk-events/summary`
+
+Purpose: provide dashboard-level summary counts for console visualization.
+
+Response fields:
+
+- `total_events`
+- `by_risk_level` (`R1`, `R2`, `R3`)
+- `by_channel_type` (`work`, `finance`, `mixed`)
+- `consent` (`granted`, `revoked`, `not_granted`)
+
 ### `GET /api/channels/work-study`
 
 Purpose: work-study options list (mock/static in MVP+).

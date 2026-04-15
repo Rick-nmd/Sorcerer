@@ -45,6 +45,28 @@
       </section>
 
       <section class="card">
+        <h2>Dashboard Summary</h2>
+        <div id="summaryCards" class="summary-grid">
+          <article class="summary-card">
+            <h3>Total Events</h3>
+            <p id="totalEvents">0</p>
+          </article>
+          <article class="summary-card">
+            <h3>Risk Levels</h3>
+            <p id="riskSummary">R1:0 | R2:0 | R3:0</p>
+          </article>
+          <article class="summary-card">
+            <h3>Channels</h3>
+            <p id="channelSummary">work:0 | finance:0 | mixed:0</p>
+          </article>
+          <article class="summary-card">
+            <h3>Consent</h3>
+            <p id="consentSummary">granted:0 | revoked:0 | not_granted:0</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Events</h2>
         <div id="meta">No data loaded yet.</div>
         <table>
@@ -60,6 +82,23 @@
             </tr>
           </thead>
           <tbody id="eventsBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Consent Audit</h2>
+        <div id="consentMeta">No consent events loaded yet.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Consent Event ID</th>
+              <th>Timestamp</th>
+              <th>Actor</th>
+              <th>State</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="consentBody"></tbody>
         </table>
       </section>
     </main>

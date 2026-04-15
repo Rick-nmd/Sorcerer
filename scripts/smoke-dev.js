@@ -59,6 +59,10 @@ async function main() {
   assert(query.response.ok && query.json.success, "Query check failed");
   console.log("[smoke] Query check passed");
 
+  const summary = await requestJson(`${baseUrl}/api/risk-events/summary`);
+  assert(summary.response.ok && summary.json.success, "Summary check failed");
+  console.log("[smoke] Summary check passed");
+
   const csvResponse = await fetch(`${baseUrl}/api/risk-events/export.csv`);
   assert(csvResponse.ok, "CSV export check failed");
   console.log("[smoke] CSV export check passed");

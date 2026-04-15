@@ -140,6 +140,29 @@ function buildMockWorkStudyOptions() {
   ];
 }
 
+function buildRiskSummary(items) {
+  const summary = {
+    total_events: items.length,
+    by_risk_level: { R1: 0, R2: 0, R3: 0 },
+    by_channel_type: { work: 0, finance: 0, mixed: 0 },
+    consent: { granted: 0, revoked: 0, not_granted: 0 }
+  };
+
+  for (const item of items) {
+    if (summary.by_risk_level[item.risk_level] !== undefined) {
+      summary.by_risk_level[item.risk_level] += 1;
+    }
+    if (summary.by_channel_type[item.channel_type] !== undefined) {
+      summary.by_channel_type[item.channel_type] += 1;
+    }
+    if (summary.consent[item.consent_state] !== undefined) {
+      summary.consent[item.consent_state] += 1;
+    }
+  }
+
+  return summary;
+}
+
 app.use("/console", express.static(path.resolve(__dirname, "../../../apps/school-console")));
 
 app.get("/health", (_req, res) => {
@@ -221,6 +244,10 @@ app.get("/api/risk-events/export.csv", (_req, res) => {
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="risk-events.csv"');
   return res.status(200).send(csv);
+});
+
+app.get("/api/risk-events/summary", (_req, res) => {
+  return res.json(buildEnvelope(true, "OK", buildRiskSummary(riskEvents)));
 });
 
 app.get("/api/channels/work-study", (_req, res) => {

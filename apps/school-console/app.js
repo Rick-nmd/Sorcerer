@@ -9,7 +9,13 @@ const ui = {
   refreshBtn: document.getElementById("refreshBtn"),
   exportBtn: document.getElementById("exportBtn"),
   meta: document.getElementById("meta"),
-  eventsBody: document.getElementById("eventsBody")
+  eventsBody: document.getElementById("eventsBody"),
+  totalEvents: document.getElementById("totalEvents"),
+  riskSummary: document.getElementById("riskSummary"),
+  channelSummary: document.getElementById("channelSummary"),
+  consentSummary: document.getElementById("consentSummary"),
+  consentMeta: document.getElementById("consentMeta"),
+  consentBody: document.getElementById("consentBody")
 };
 
 function getApiBaseUrl() {
@@ -63,6 +69,38 @@ function renderRows(items) {
     .join("");
 }
 
+function renderSummary(summary) {
+  if (!summary) {
+    return;
+  }
+
+  ui.totalEvents.textContent = String(summary.total_events ?? 0);
+  ui.riskSummary.textContent = `R1:${summary.by_risk_level?.R1 ?? 0} | R2:${summary.by_risk_level?.R2 ?? 0} | R3:${summary.by_risk_level?.R3 ?? 0}`;
+  ui.channelSummary.textContent = `work:${summary.by_channel_type?.work ?? 0} | finance:${summary.by_channel_type?.finance ?? 0} | mixed:${summary.by_channel_type?.mixed ?? 0}`;
+  ui.consentSummary.textContent = `granted:${summary.consent?.granted ?? 0} | revoked:${summary.consent?.revoked ?? 0} | not_granted:${summary.consent?.not_granted ?? 0}`;
+}
+
+function renderConsentRows(items) {
+  if (!items.length) {
+    ui.consentBody.innerHTML = `<tr><td colspan="5">No consent events found.</td></tr>`;
+    return;
+  }
+
+  ui.consentBody.innerHTML = items
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.consent_event_id || "-"}</td>
+        <td>${item.timestamp || "-"}</td>
+        <td>${item.actor || "-"}</td>
+        <td>${item.consent_state || "-"}</td>
+        <td>${item.note || "-"}</td>
+      </tr>
+    `
+    )
+    .join("");
+}
+
 async function refreshEvents() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
@@ -71,14 +109,27 @@ async function refreshEvents() {
   const url = `${baseUrl.replace(/\/$/, "")}/api/risk-events${query ? `?${query}` : ""}`;
 
   try {
-    const response = await fetch(url);
-    const result = await response.json();
+    const [eventResponse, summaryResponse, consentResponse] = await Promise.all([
+      fetch(url),
+      fetch(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`),
+      fetch(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`)
+    ]);
+    const result = await eventResponse.json();
+    const summaryResult = await summaryResponse.json();
+    const consentResult = await consentResponse.json();
     const items = result?.data?.items || [];
+    const summary = summaryResult?.data;
+    const consentItems = consentResult?.data?.items || [];
     renderRows(items);
+    renderSummary(summary);
+    renderConsentRows(consentItems);
     ui.meta.textContent = `Loaded ${items.length} / total ${result?.data?.total ?? 0} item(s).`;
+    ui.consentMeta.textContent = `Loaded ${consentItems.length} / total ${consentResult?.data?.total ?? 0} consent event(s).`;
   } catch (error) {
     ui.meta.textContent = `Request failed: ${error.message}`;
     ui.eventsBody.innerHTML = `<tr><td colspan="7">Unable to load events.</td></tr>`;
+    ui.consentMeta.textContent = `Request failed: ${error.message}`;
+    ui.consentBody.innerHTML = `<tr><td colspan="5">Unable to load consent events.</td></tr>`;
   }
 }
 
