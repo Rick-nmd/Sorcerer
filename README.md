@@ -34,6 +34,8 @@ Detailed workflow: `docs/dual-machine-workflow.md`
    - `npm run check`
 3. Start backend placeholder server:
    - `npm run start`
+4. Start A-machine student demo:
+   - `npm run start:a`
 
 ## Scope
 
