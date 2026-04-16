@@ -2,10 +2,12 @@ import {
   getApiBaseUrl,
   getApiKey,
   getConsentPreferences,
+  getLanguage,
   getOrCreateStudentSessionId,
   setApiBaseUrl,
   setApiKey,
-  setConsentPreferences
+  setConsentPreferences,
+  setLanguage
 } from "./config.js";
 import { analyzeRisk } from "./risk-engine.js";
 import { buildRecommendations, normalizeRemoteRecommendations } from "./recommendation-engine.js";
@@ -19,6 +21,7 @@ import {
 } from "./api-client.js";
 
 const ui = {
+  languageSelect: document.getElementById("languageSelect"),
   apiBaseUrl: document.getElementById("apiBaseUrl"),
   apiKey: document.getElementById("apiKey"),
   consentNote: document.getElementById("consentNote"),
@@ -38,9 +41,12 @@ const ui = {
   saveConsentPrefsBtn: document.getElementById("saveConsentPrefsBtn"),
   refreshHistoryBtn: document.getElementById("refreshHistoryBtn"),
   consentSummaryOutput: document.getElementById("consentSummaryOutput"),
-  selfCheckNeed: document.getElementById("selfCheckNeed"),
-  selfCheckRepay: document.getElementById("selfCheckRepay"),
-  selfCheckAlt: document.getElementById("selfCheckAlt"),
+  q1Label: document.getElementById("q1Label"),
+  q2Label: document.getElementById("q2Label"),
+  q3Label: document.getElementById("q3Label"),
+  loanPurpose: document.getElementById("loanPurpose"),
+  loanAmountRange: document.getElementById("loanAmountRange"),
+  repaymentSource: document.getElementById("repaymentSource"),
   analyzeBtn: document.getElementById("analyzeBtn"),
   uploadBtn: document.getElementById("uploadBtn"),
   interventionBanner: document.getElementById("interventionBanner"),
@@ -62,6 +68,45 @@ let latestRecommendations = [];
 let cooldownTimer = null;
 let latestRecommendationSource = "local";
 const studentSessionId = getOrCreateStudentSessionId();
+let currentLang = getLanguage();
+
+const I18N = {
+  en: {
+    q1: "Q1: What is the primary purpose of this loan?",
+    q2: "Q2: What is the expected loan amount range?",
+    q3: "Q3: How do you plan to repay this loan?",
+    intervention_r3: "High-risk scenario. Pause application and prioritize safe alternatives.",
+    intervention_r2: "Medium-risk scenario. Review repayment pressure before any submit action.",
+    intervention_r1: "Low-risk scenario. Continue with educational reminders and support resources.",
+    reflection_prefix: "Cooling-off reflection",
+    reflection_q1: "Purpose",
+    reflection_q2: "Amount range",
+    reflection_q3: "Repayment plan"
+  },
+  zh: {
+    q1: "问题一：您此次借贷的主要用途是？",
+    q2: "问题二：您预计的借贷金额范围是？",
+    q3: "问题三：您计划如何偿还这笔借款？",
+    intervention_r3: "高风险场景。建议暂停提交，先查看更安全的替代方案。",
+    intervention_r2: "中风险场景。建议先评估还款压力，再做提交决定。",
+    intervention_r1: "低风险场景。建议继续关注科普与支持资源，保持谨慎决策。",
+    reflection_prefix: "降温反思",
+    reflection_q1: "用途",
+    reflection_q2: "金额范围",
+    reflection_q3: "还款来源"
+  }
+};
+
+function t(key) {
+  return I18N[currentLang]?.[key] || I18N.en[key] || key;
+}
+
+function setUiLanguage(lang) {
+  currentLang = lang === "zh" ? "zh" : "en";
+  ui.q1Label.textContent = t("q1");
+  ui.q2Label.textContent = t("q2");
+  ui.q3Label.textContent = t("q3");
+}
 
 function createEventId() {
   return `event_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -182,10 +227,10 @@ function getScenarioInput() {
     principal: Number(ui.principal.value),
     months: Number(ui.months.value),
     stage: ui.stage.value,
-    self_check: {
-      urgent_need: ui.selfCheckNeed.value,
-      stable_repay_source: ui.selfCheckRepay.value,
-      tried_alternatives: ui.selfCheckAlt.value
+    cooling_off: {
+      loan_purpose: ui.loanPurpose.value,
+      loan_amount_range: ui.loanAmountRange.value,
+      repayment_source: ui.repaymentSource.value
     },
     consent_state: ui.consent.value
   };
@@ -296,17 +341,40 @@ function calculateCostSnapshot({ apr, principal, months }) {
   };
 }
 
-function getSelfCheckRiskNotes(selfCheck) {
+function getSelfCheckRiskNotes(coolingOff) {
   const notes = [];
-  if (selfCheck.urgent_need === "yes") {
-    notes.push("User reports urgent need, impulsive borrowing risk may increase.");
+  const purpose = coolingOff.loan_purpose;
+  const amountRange = coolingOff.loan_amount_range;
+  const repay = coolingOff.repayment_source;
+
+  // Impulse Control / Cognitive Awakening / Decision Delay framing
+  if (purpose === "daily_expenses" || purpose === "electronics" || purpose === "entertainment_social") {
+    notes.push(
+      currentLang === "zh"
+        ? "用途偏日常/消费型支出，建议先降温并延迟决策。"
+        : "Purpose leans toward consumption; consider a cooling-off pause and decision delay."
+    );
   }
-  if (selfCheck.stable_repay_source === "no") {
-    notes.push("No stable repayment source reported.");
+  if (repay === "other_loans_rollover" || repay === "no_clear_plan") {
+    notes.push(
+      currentLang === "zh"
+        ? "还款计划不清晰或可能以贷养贷，风险显著上升。"
+        : "Repayment plan is unclear or involves debt rollover; risk increases substantially."
+    );
   }
-  if (selfCheck.tried_alternatives === "no") {
-    notes.push("Alternative options not tried yet.");
+  if (amountRange === "above_50000") {
+    notes.push(
+      currentLang === "zh"
+        ? "金额范围较高，建议先评估总成本与替代支持。"
+        : "Higher amount range selected; review total cost and alternatives first."
+    );
   }
+
+  notes.push(
+    `${t("reflection_prefix")}: ${t("reflection_q1")}=${purpose}; ${t("reflection_q2")}=${amountRange}; ${t(
+      "reflection_q3"
+    )}=${repay}`
+  );
   return notes;
 }
 
@@ -339,7 +407,7 @@ function buildEventPayload() {
 
   const scenario = getScenarioInput();
   const costSnapshot = calculateCostSnapshot(scenario);
-  const selfCheckNotes = getSelfCheckRiskNotes(scenario.self_check);
+  const selfCheckNotes = getSelfCheckRiskNotes(scenario.cooling_off);
   const consentScopes = getConsentScopes();
 
   return {
@@ -353,34 +421,34 @@ function buildEventPayload() {
     consent_scopes: consentScopes,
     channel_type: latestAnalysis.channel_type,
     why_recommended: latestRecommendations.flatMap((item) => item.why_recommended),
-    cost_snapshot: costSnapshot
+    cost_snapshot: costSnapshot,
+    cooling_off: scenario.cooling_off
   };
 }
 
 function updateInterventionBanner(riskLevel) {
   if (riskLevel === "R3") {
-    ui.interventionBanner.textContent =
-      "High-risk scenario. Pause application and prioritize safe alternatives.";
+    ui.interventionBanner.textContent = t("intervention_r3");
     startCooldown(15);
     return;
   }
 
   if (riskLevel === "R2") {
-    ui.interventionBanner.textContent =
-      "Medium-risk scenario. Review repayment pressure before any submit action.";
+    ui.interventionBanner.textContent = t("intervention_r2");
     startCooldown(15);
     return;
   }
 
-  ui.interventionBanner.textContent =
-    "Low-risk scenario. Continue with educational reminders and support resources.";
+  ui.interventionBanner.textContent = t("intervention_r1");
 }
 
 function initialize() {
   const storedScopes = getConsentPreferences();
+  ui.languageSelect.value = currentLang;
   ui.apiBaseUrl.value = getApiBaseUrl();
   ui.apiKey.value = getApiKey();
   applyConsentScopes(storedScopes);
+  setUiLanguage(currentLang);
   ui.sessionMeta.innerHTML = `
     <strong>Student Session ID:</strong> ${studentSessionId}<br/>
     <strong>Purpose:</strong> links consent changes, analysis uploads, and student history in demo mode.
@@ -391,6 +459,13 @@ function initialize() {
     setApiBaseUrl(ui.apiBaseUrl.value);
     setApiKey(ui.apiKey.value);
     ui.uploadOutput.textContent = `Saved API base URL: ${getApiBaseUrl()}`;
+  });
+
+  ui.languageSelect.addEventListener("change", () => {
+    setLanguage(ui.languageSelect.value);
+    setUiLanguage(ui.languageSelect.value);
+    ui.uploadOutput.textContent =
+      ui.languageSelect.value === "zh" ? "已切换语言为中文。" : "Language switched to English.";
   });
 
   ui.syncConsentBtn.addEventListener("click", async () => {
@@ -447,7 +522,7 @@ function initialize() {
     const scenario = getScenarioInput();
     latestAnalysis = analyzeRisk(scenario);
     const costSnapshot = calculateCostSnapshot(scenario);
-    const selfCheckNotes = getSelfCheckRiskNotes(scenario.self_check);
+    const selfCheckNotes = getSelfCheckRiskNotes(scenario.cooling_off);
 
     try {
       const remoteRecommendations = await fetchChannelRecommendations({

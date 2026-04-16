@@ -2,6 +2,7 @@ const STORAGE_KEY = "sorcerer_api_base_url";
 const API_KEY_STORAGE_KEY = "sorcerer_api_key";
 const SESSION_STORAGE_KEY = "sorcerer_student_session_id";
 const CONSENT_PREFS_STORAGE_KEY = "sorcerer_consent_preferences";
+const LANGUAGE_STORAGE_KEY = "sorcerer_language";
 
 export const defaultApiBaseUrl = "http://localhost:8787";
 
@@ -69,4 +70,14 @@ export function setConsentPreferences(value) {
       partner_offers: Boolean(value.partner_offers)
     })
   );
+}
+
+export function getLanguage() {
+  const raw = (localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en").trim();
+  return raw === "zh" ? "zh" : "en";
+}
+
+export function setLanguage(value) {
+  const normalized = value === "zh" ? "zh" : "en";
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, normalized);
 }

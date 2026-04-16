@@ -18,6 +18,11 @@
 
       <section class="card">
         <h2>Environment</h2>
+        <label for="languageSelect">Language / 语言</label>
+        <select id="languageSelect">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
         <label for="apiBaseUrl">API_BASE_URL</label>
         <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
         <label for="apiKey">API Key (optional, production mode)</label>
@@ -68,22 +73,32 @@
             <option value="revoked">revoked</option>
           </select>
 
-          <label for="selfCheckNeed">Self-check: Is this an urgent need?</label>
-          <select id="selfCheckNeed">
-            <option value="yes">yes</option>
-            <option value="no">no</option>
+          <label id="q1Label" for="loanPurpose">Q1: What is the primary purpose of this loan?</label>
+          <select id="loanPurpose">
+            <option value="daily_expenses">Daily Expenses (Food, Shopping)</option>
+            <option value="electronics">Electronics (Phone, Laptop)</option>
+            <option value="education_training">Education & Training (Certificates, Courses)</option>
+            <option value="entertainment_social">Entertainment & Social (Travel, Gatherings)</option>
+            <option value="medical_emergency">Medical Emergency</option>
+            <option value="other">Other</option>
           </select>
 
-          <label for="selfCheckRepay">Self-check: Do you have stable repayment source?</label>
-          <select id="selfCheckRepay">
-            <option value="yes">yes</option>
-            <option value="no">no</option>
+          <label id="q2Label" for="loanAmountRange">Q2: What is the expected loan amount range?</label>
+          <select id="loanAmountRange">
+            <option value="below_1000">Below ¥1000</option>
+            <option value="1000_5000">¥1000 - ¥5000</option>
+            <option value="5000_10000">¥5000 - ¥10000</option>
+            <option value="10000_50000">¥10000 - ¥50000</option>
+            <option value="above_50000">Above ¥50000</option>
           </select>
 
-          <label for="selfCheckAlt">Self-check: Have you tried alternatives first?</label>
-          <select id="selfCheckAlt">
-            <option value="yes">yes</option>
-            <option value="no">no</option>
+          <label id="q3Label" for="repaymentSource">Q3: How do you plan to repay this loan?</label>
+          <select id="repaymentSource">
+            <option value="parents_allowance">Allowance from Parents</option>
+            <option value="work_study_income">Part-time Job / Work-Study Income</option>
+            <option value="scholarship_aid">Scholarship or Financial Aid</option>
+            <option value="other_loans_rollover">Other Loan Channels (Debt Rollover)</option>
+            <option value="no_clear_plan">No Clear Plan Yet</option>
           </select>
         </div>
         <div class="actions">
