@@ -34,13 +34,13 @@ Production roadmap: `docs/production-integration-roadmap.md`
    - `npm install`
 2. Validate schemas:
    - `npm run check`
-3. Start backend server:
-   - `npm run start`
+3. Start full demo (recommended):
+   - `npm run demo`
 4. Open school console:
-   - `http://localhost:8787/console`
-5. Start A-machine student demo:
-   - `npm run start:a`
-6. Run integrated smoke checks:
+   - `http://localhost:8787/console` (or the port printed in terminal)
+5. Open student plugin demo:
+   - `http://localhost:5173` (or the port printed in terminal)
+6. Run integrated smoke checks (in another terminal):
    - `npm run smoke:dev`
 
 ## Scope

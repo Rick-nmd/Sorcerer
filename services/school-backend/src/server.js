@@ -817,7 +817,35 @@ app.post("/api/demo/reset", requireRole(["admin", "school", "demo"]), (_req, res
   return res.json(buildEnvelope(true, "Demo data reset", { risk_events: 0, consent_events: 0 }));
 });
 
-const port = process.env.PORT || 8787;
-app.listen(port, () => {
-  console.log(`school-backend listening on :${port}`);
-});
+function listenWithFallback(startPort) {
+  const basePort = Number(startPort) || 8787;
+  const maxAttempts = 10;
+
+  const server = app.listen(basePort, () => {
+    console.log(`school-backend listening on :${basePort}`);
+  });
+
+  server.on("error", (error) => {
+    if (error?.code !== "EADDRINUSE") {
+      throw error;
+    }
+    server.close();
+    for (let offset = 1; offset <= maxAttempts; offset += 1) {
+      const nextPort = basePort + offset;
+      try {
+        const retry = app.listen(nextPort, () => {
+          console.log(`school-backend port ${basePort} in use, switched to :${nextPort}`);
+        });
+        retry.on("error", (err) => {
+          if (err?.code !== "EADDRINUSE") throw err;
+        });
+        return;
+      } catch (_err) {
+        // keep scanning
+      }
+    }
+    throw error;
+  });
+}
+
+listenWithFallback(process.env.PORT);
