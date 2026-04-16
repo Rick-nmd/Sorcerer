@@ -3,27 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>School Risk Console</title>
+    <title>Campus Support Console</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="container">
-      <h1>School Risk Console</h1>
+      <h1>Campus Support Console</h1>
       <div class="card">
-        <strong>Tip:</strong> if you started via <code>npm run demo</code>, use the port printed in terminal.
-        Example: <code>http://localhost:8788/console</code> (not always 8787).
+        <strong>Tip:</strong> use the backend port printed in your terminal (for example from <code>npm run demo</code>).
+        Example: <code>http://localhost:8788/console</code> (the port may differ from 8787).
       </div>
 
       <section class="card">
-        <h2>Filters</h2>
+        <h2>Query & filters</h2>
         <div class="filters">
-          <label for="apiBaseUrl">API Base URL</label>
+          <label for="apiBaseUrl">Backend URL</label>
           <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
 
-          <label for="apiKey">API Key (optional, production mode)</label>
+          <label for="apiKey">API key (optional)</label>
           <input id="apiKey" type="text" placeholder="x-api-key value" />
 
-          <label for="riskLevel">Risk Level</label>
+          <label for="riskLevel">Risk tier</label>
           <select id="riskLevel">
             <option value="">All</option>
             <option value="R1">R1</option>
@@ -31,7 +31,7 @@
             <option value="R3">R3</option>
           </select>
 
-          <label for="channelType">Channel Type</label>
+          <label for="channelType">Channel</label>
           <select id="channelType">
             <option value="">All</option>
             <option value="work">work</option>
@@ -39,7 +39,7 @@
             <option value="mixed">mixed</option>
           </select>
 
-          <label for="sourceFilter">Source</label>
+          <label for="sourceFilter">Event source</label>
           <select id="sourceFilter">
             <option value="">All</option>
             <option value="browser">browser</option>
@@ -48,7 +48,7 @@
             <option value="demo">demo</option>
           </select>
 
-          <label for="studentSessionId">Student Session ID</label>
+          <label for="studentSessionId">Student session ID</label>
           <input id="studentSessionId" type="text" placeholder="student_..." />
 
           <label for="fromDate">From</label>
@@ -59,11 +59,11 @@
         </div>
         <div class="actions">
           <button id="refreshBtn">Refresh</button>
-          <button id="exportBtn">Export CSV</button>
+          <button id="exportBtn">Export events (CSV)</button>
         </div>
         <div class="actions">
-          <button id="seedDemoBtn">Seed Demo Data</button>
-          <button id="resetDemoBtn">Reset Demo Data</button>
+          <button id="seedDemoBtn">Load demo dataset</button>
+          <button id="resetDemoBtn">Clear demo dataset</button>
         </div>
         <label class="inline-checkbox">
           <input id="autoRefresh" type="checkbox" />
@@ -72,14 +72,14 @@
       </section>
 
       <section class="card">
-        <h2>Dashboard Summary</h2>
+        <h2>Summary</h2>
         <div id="summaryCards" class="summary-grid">
           <article class="summary-card">
-            <h3>Total Events</h3>
+            <h3>Total support events</h3>
             <p id="totalEvents">0</p>
           </article>
           <article class="summary-card">
-            <h3>Risk Levels</h3>
+            <h3>Risk tiers</h3>
             <p id="riskSummary">R1:0 | R2:0 | R3:0</p>
           </article>
           <article class="summary-card">
@@ -87,31 +87,31 @@
             <p id="channelSummary">work:0 | finance:0 | mixed:0</p>
           </article>
           <article class="summary-card">
-            <h3>Consent</h3>
+            <h3>Consent states</h3>
             <p id="consentSummary">granted:0 | revoked:0 | not_granted:0</p>
           </article>
           <article class="summary-card">
-            <h3>Sources</h3>
+            <h3>Event sources</h3>
             <p id="sourceSummary">browser:0 | network:0 | integration:0 | demo:0</p>
           </article>
         </div>
       </section>
 
       <section class="card">
-        <h2>Events</h2>
-        <div id="meta">No data loaded yet.</div>
+        <h2>Support events</h2>
+        <div id="meta">No support events loaded yet.</div>
         <table>
           <thead>
             <tr>
               <th>Event ID</th>
               <th>Timestamp</th>
               <th>Session</th>
-              <th>Risk</th>
+              <th>Risk tier</th>
               <th>Channel</th>
               <th>Source</th>
               <th>Consent</th>
-              <th>Why Flagged</th>
-              <th>Why Recommended</th>
+              <th>Why flagged</th>
+              <th>Why recommended</th>
             </tr>
           </thead>
           <tbody id="eventsBody"></tbody>
@@ -119,15 +119,15 @@
       </section>
 
       <section class="card">
-        <h2>Consent Audit</h2>
+        <h2>Consent change log</h2>
         <div id="consentMeta">No consent events loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Consent Event ID</th>
+              <th>Consent record ID</th>
               <th>Timestamp</th>
               <th>Session</th>
-              <th>Actor</th>
+              <th>Who</th>
               <th>State</th>
               <th>Scopes</th>
               <th>Note</th>
@@ -138,7 +138,7 @@
       </section>
 
       <section class="card">
-        <h2>Consent Profiles</h2>
+        <h2>Consent snapshot</h2>
         <div id="consentProfileMeta">No consent profiles loaded yet.</div>
         <table>
           <thead>
@@ -156,16 +156,16 @@
       </section>
 
       <section class="card">
-        <h2>Student Session Drilldown</h2>
+        <h2>Student timeline</h2>
         <div class="actions">
-          <button id="loadStudentHistoryBtn">Load Student History</button>
+          <button id="loadStudentHistoryBtn">Load student timeline</button>
         </div>
-        <div id="studentHistoryMeta">Enter a student session ID to inspect history.</div>
-        <pre id="studentHistoryOutput">No student history loaded yet.</pre>
+        <div id="studentHistoryMeta">Paste a student session ID from the student UI, then load the timeline.</div>
+        <pre id="studentHistoryOutput">No student timeline loaded yet.</pre>
       </section>
 
       <section class="card">
-        <h2>Support Resources Snapshot</h2>
+        <h2>Student support content</h2>
         <div id="supportMeta">No support resources loaded yet.</div>
         <div class="panel-grid">
           <article class="panel-card">
@@ -180,7 +180,7 @@
       </section>
 
       <section class="card">
-        <h2>Network Signals</h2>
+        <h2>Network safety signals</h2>
         <div id="networkMeta">No network signals loaded yet.</div>
         <table>
           <thead>
@@ -198,7 +198,7 @@
       </section>
 
       <section class="card">
-        <h2>Audit Trail</h2>
+        <h2>Governance audit chain</h2>
         <div id="auditMeta">No audit events loaded yet.</div>
         <table>
           <thead>

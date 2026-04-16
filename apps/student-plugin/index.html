@@ -3,70 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Plugin Demo</title>
+    <title>Student Support Companion</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="container">
       <header>
-        <h1>Student Risk Intervention Demo</h1>
-        <p>
-          A-machine sandbox for risk detection, explainable intervention, and
-          event upload.
+        <h1 id="pageTitle">Cooling-Off & Support Companion</h1>
+        <p id="pageSubtitle">
+          Private, explainable support before you decide — with a cooling-off pause and campus alternatives.
         </p>
       </header>
 
       <section class="card">
-        <h2>Environment</h2>
-        <label for="languageSelect">Language / 语言</label>
+        <h2 id="h2_settings">Settings</h2>
+        <label for="languageSelect" id="label_language">Language / 语言</label>
         <select id="languageSelect">
           <option value="en">English</option>
           <option value="zh">中文</option>
         </select>
-        <label for="apiBaseUrl">API_BASE_URL</label>
+        <label for="apiBaseUrl" id="label_api_base_url">Backend URL</label>
         <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
-        <label for="apiKey">API Key (optional, production mode)</label>
+        <label for="apiKey" id="label_api_key">API Key (optional)</label>
         <input id="apiKey" type="text" placeholder="x-api-key value" />
-        <label for="consentNote">Consent Note (optional)</label>
+        <label for="consentNote" id="label_consent_note">Consent note (optional)</label>
         <input id="consentNote" type="text" placeholder="e.g. user changed consent in UI" />
         <div class="actions">
-          <button id="saveApiBaseUrl">Save API Base URL</button>
-          <button id="syncConsentBtn">Sync Consent Event</button>
+          <button id="saveApiBaseUrl">Save settings</button>
+          <button id="syncConsentBtn">Update consent</button>
         </div>
       </section>
 
       <section class="card">
-        <h2>Student Session</h2>
+        <h2 id="h2_session">Student session</h2>
         <div id="sessionMeta" class="muted">Initializing student session...</div>
       </section>
 
       <section class="card">
-        <h2>Scenario Input</h2>
+        <h2 id="h2_scenario">Page check</h2>
         <div class="grid">
-          <label for="scenarioText">Page Text</label>
+          <label for="scenarioText" id="label_page_text">Page text</label>
           <textarea
             id="scenarioText"
             rows="6"
             placeholder="Paste page text, CTA, and marketing copy..."
           ></textarea>
 
-          <label for="apr">APR (%)</label>
+          <label for="apr" id="label_apr">APR (%)</label>
           <input id="apr" type="number" min="0" step="0.1" value="18.0" />
 
-          <label for="principal">Principal (CNY)</label>
+          <label for="principal" id="label_principal">Principal (CNY)</label>
           <input id="principal" type="number" min="100" step="100" value="5000" />
 
-          <label for="months">Repayment Months</label>
+          <label for="months" id="label_months">Repayment months</label>
           <input id="months" type="number" min="1" max="48" step="1" value="12" />
 
-          <label for="stage">User Stage</label>
+          <label for="stage" id="label_stage">User stage</label>
           <select id="stage">
             <option value="browse">Browse only</option>
             <option value="fill">Fill form</option>
             <option value="submit">Submit application</option>
           </select>
 
-          <label for="consent">Consent State</label>
+          <label for="consent" id="label_consent">Consent state</label>
           <select id="consent">
             <option value="granted">granted</option>
             <option value="not_granted">not_granted</option>
@@ -102,43 +101,43 @@
           </select>
         </div>
         <div class="actions">
-          <button id="analyzeBtn">Analyze Risk</button>
-          <button id="uploadBtn">Upload Event</button>
+          <button id="analyzeBtn">Run safety check</button>
+          <button id="uploadBtn">Send summary to school</button>
         </div>
       </section>
 
       <section class="card">
-        <h2>Intervention</h2>
+        <h2 id="h2_intervention">Cooling-off</h2>
         <div id="interventionBanner" class="muted">
-          Analyze a scenario to generate intervention details.
+          Run a safety check to see guidance and a cooling-off timer when needed.
         </div>
         <div id="cooldownPanel" class="hidden">
-          Cooldown active: <strong id="cooldownSeconds">15</strong>s
+          <span id="cooldownLabel">Cooling-off timer:</span> <strong id="cooldownSeconds">15</strong>s
         </div>
       </section>
 
       <section class="card">
-        <h2>Layered Consent</h2>
+        <h2 id="h2_consent">Consent & data sharing</h2>
         <div class="grid">
           <div>
-            <label>Consent Scopes</label>
+            <label id="label_consent_scopes">Consent scopes</label>
             <div class="checkbox-group">
               <label class="checkbox-row" for="scopeTelemetry">
                 <input id="scopeTelemetry" type="checkbox" checked />
-                <span>Browser telemetry for risk detection</span>
+                <span id="scopeTelemetryText">Browser telemetry for risk detection</span>
               </label>
               <label class="checkbox-row" for="scopeSchoolSupport">
                 <input id="scopeSchoolSupport" type="checkbox" checked />
-                <span>School support follow-up for high risk</span>
+                <span id="scopeSchoolSupportText">School support follow-up for high risk</span>
               </label>
               <label class="checkbox-row" for="scopePartnerOffers">
                 <input id="scopePartnerOffers" type="checkbox" />
-                <span>Receive verified partner finance offers</span>
+                <span id="scopePartnerOffersText">Receive verified partner finance offers</span>
               </label>
             </div>
           </div>
           <div>
-            <label for="consentReason">Consent Change Reason</label>
+            <label for="consentReason" id="label_consent_reason">Consent change reason</label>
             <textarea
               id="consentReason"
               rows="5"
@@ -147,64 +146,64 @@
           </div>
         </div>
         <div class="actions">
-          <button id="saveConsentPrefsBtn">Save Consent Preferences</button>
-          <button id="refreshHistoryBtn">Refresh Student History</button>
+          <button id="saveConsentPrefsBtn">Save consent preferences</button>
+          <button id="refreshHistoryBtn">Refresh my activity</button>
         </div>
         <div id="consentSummaryOutput" class="muted">
-          No layered consent summary yet.
+          No consent summary yet.
         </div>
       </section>
 
       <section class="card">
-        <h2>Risk Result</h2>
+        <h2 id="h2_risk">Safety check result</h2>
         <pre id="riskOutput">No analysis yet.</pre>
       </section>
 
       <section class="card">
-        <h2>Cost Transparency</h2>
+        <h2 id="h2_cost">Cost transparency</h2>
         <div id="costOutput" class="muted">No cost calculation yet.</div>
       </section>
 
       <section class="card">
-        <h2>Explainability</h2>
+        <h2 id="h2_explain">Why this guidance</h2>
         <div id="explainOutput" class="muted">No explainability notes yet.</div>
       </section>
 
       <section class="card">
-        <h2>Alternative Channels</h2>
+        <h2 id="h2_alternatives">Campus alternatives</h2>
         <div id="recommendationOutput" class="recommendations">
           No recommendation yet.
         </div>
       </section>
 
       <section class="card">
-        <h2>Regular Channel Access (Student View)</h2>
+        <h2 id="h2_finance">Verified finance options</h2>
         <div id="regularChannelOutput" class="recommendations">
           No regular channel info yet.
         </div>
       </section>
 
       <section class="card">
-        <h2>Safety Education</h2>
+        <h2 id="h2_education">Safety education</h2>
         <div id="educationOutput" class="resource-list">
           No education content loaded yet.
         </div>
       </section>
 
       <section class="card">
-        <h2>Wellbeing Support</h2>
+        <h2 id="h2_wellbeing">Wellbeing support</h2>
         <div id="wellbeingOutput" class="resource-list">
           No wellbeing support content loaded yet.
         </div>
       </section>
 
       <section class="card">
-        <h2>Student History</h2>
+        <h2 id="h2_history">My activity summary</h2>
         <pre id="historyOutput">No student history loaded yet.</pre>
       </section>
 
       <section class="card">
-        <h2>Upload Result</h2>
+        <h2 id="h2_upload">Status</h2>
         <pre id="uploadOutput">No upload attempt yet.</pre>
       </section>
     </main>

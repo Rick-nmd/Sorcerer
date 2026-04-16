@@ -253,8 +253,8 @@ async function loadStudentHistory() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   const sessionId = ui.studentSessionId.value.trim();
   if (!sessionId) {
-    ui.studentHistoryMeta.textContent = "Enter a student session ID first.";
-    ui.studentHistoryOutput.textContent = "No student history loaded yet.";
+    ui.studentHistoryMeta.textContent = "Paste a student session ID first.";
+    ui.studentHistoryOutput.textContent = "No student timeline loaded yet.";
     return;
   }
 
@@ -262,11 +262,11 @@ async function loadStudentHistory() {
     const result = await fetchJson(
       `${baseUrl.replace(/\/$/, "")}/api/student/history?session_id=${encodeURIComponent(sessionId)}&limit=20`
     );
-    ui.studentHistoryMeta.textContent = `Loaded history for ${sessionId}.`;
+    ui.studentHistoryMeta.textContent = `Loaded timeline for ${sessionId}.`;
     ui.studentHistoryOutput.textContent = JSON.stringify(result.data, null, 2);
   } catch (error) {
-    ui.studentHistoryMeta.textContent = `Student history request failed: ${error.message}`;
-    ui.studentHistoryOutput.textContent = "Unable to load student history.";
+    ui.studentHistoryMeta.textContent = `Student timeline request failed: ${error.message}`;
+    ui.studentHistoryOutput.textContent = "Unable to load student timeline.";
   }
 }
 
@@ -392,7 +392,7 @@ async function seedDemoData() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/seed`);
-  ui.meta.textContent = `Seeded demo data: ${result?.data?.risk_events ?? 0} risk events`;
+  ui.meta.textContent = `Loaded demo dataset: ${result?.data?.risk_events ?? 0} support events`;
   await refreshEvents();
 }
 
@@ -400,7 +400,7 @@ async function resetDemoData() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/reset`);
-  ui.meta.textContent = `Reset demo data: ${result?.data?.risk_events ?? 0} risk events`;
+  ui.meta.textContent = `Cleared demo dataset: ${result?.data?.risk_events ?? 0} support events`;
   await refreshEvents();
 }
 
@@ -426,7 +426,7 @@ function init() {
   ui.exportBtn.addEventListener("click", exportCsv);
   ui.loadStudentHistoryBtn.addEventListener("click", () => {
     loadStudentHistory().catch((error) => {
-      ui.studentHistoryMeta.textContent = `Student history request failed: ${error.message}`;
+      ui.studentHistoryMeta.textContent = `Student timeline request failed: ${error.message}`;
     });
   });
   ui.seedDemoBtn.addEventListener("click", () => {

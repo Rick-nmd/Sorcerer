@@ -1,6 +1,8 @@
-# B-Machine Runbook (Backend + School Console)
+# School-Side Runbook (Backend + Console)
 
-## 1) Startup Commands
+This runbook is for the **school backend** and the **school console** UI served at `/console`.
+
+## 1) Startup
 
 From repo root:
 
@@ -10,19 +12,29 @@ npm run check
 npm run start
 ```
 
-Default backend address:
+Default backend URL:
 
 - `http://localhost:8787`
 
-Optional upstream config for finance channel:
+If the port is occupied, pick another port:
+
+```bash
+PORT=8899 npm run start
+```
+
+Open the console:
+
+- `http://localhost:<PORT>/console`
+
+## 2) Optional finance upstream
 
 ```bash
 export FINANCE_UPSTREAM_URL="https://example.com/finance-options"
 ```
 
-## 2) API curl Examples
+## 3) Quick curl checks
 
-### Health check
+### Health
 
 ```bash
 curl "http://localhost:8787/health"
@@ -48,96 +60,47 @@ curl -X POST "http://localhost:8787/api/risk-events" \
 ### GET /api/risk-events
 
 ```bash
-curl "http://localhost:8787/api/risk-events?risk_level=R2&channel_type=finance&from=2026-04-01T00:00:00.000Z&to=2026-04-30T23:59:59.000Z"
+curl "http://localhost:8787/api/risk-events?risk_level=R2&channel_type=finance"
 ```
 
-### GET /api/risk-events/export.csv
+### CSV export
 
 ```bash
-curl -L "http://localhost:8787/api/risk-events/export.csv?risk_level=R2" -o risk-events.csv
+curl -L "http://localhost:8787/api/risk-events/export.csv" -o risk-events.csv
 ```
 
-### GET /api/channels/work-study
+### Channels
 
 ```bash
 curl "http://localhost:8787/api/channels/work-study"
-```
-
-### GET /api/channels/finance
-
-```bash
 curl "http://localhost:8787/api/channels/finance"
 ```
 
-<<<<<<< HEAD
-### 6) Seed and reset demo data
+### Demo seed / reset
 
 ```bash
 curl -X POST "http://localhost:8787/api/demo/seed"
 curl -X POST "http://localhost:8787/api/demo/reset"
 ```
 
-## A/B Collaboration Notes
-=======
-## 3) School Console (Minimal UI)
->>>>>>> 0d8f8c9 (Document dev regression acceptance results for B-machine.)
+## 4) Student-side integration (cross-machine)
 
-<<<<<<< HEAD
-- A-machine plugin should point `API_BASE_URL` to B-machine backend URL.
-- If API key auth is enabled, configure matching `x-api-key` in both student and console UIs.
-- Required payload fields must match `contracts/schemas/risk-event.schema.json`.
-- Use demo scripts in `docs/demo-scenarios.md` for R1/R2/R3 run-through.
-=======
-Open:
-
-- `apps/school-console/index.html`
-
-Features in v1:
-
-- risk-events list rendering
-- risk_level filtering
-- CSV export trigger (`/api/risk-events/export.csv`)
-- detail fields: `why_flagged` and `why_recommended` (fallback `-`)
-
-## 4) A-Machine Integration Config
-
-For A-machine event sender, set:
+Point the student UI `Backend URL` to the school backend URL, for example:
 
 ```bash
 API_BASE_URL=http://localhost:8787
 ```
 
-Expected endpoints used by A-machine:
+If API key auth is enabled, configure matching `x-api-key` headers in both student UI and console UI.
 
-- `POST /api/risk-events`
-- `GET /api/channels/work-study`
-- `GET /api/channels/finance`
+## 5) Dev acceptance notes (example)
 
-## 5) B-Machine Acceptance Log (dev)
+When validating locally, it is common for `8787` to be occupied. In that case, run on another `PORT` and use that value everywhere (console URL + student `Backend URL` + smoke tests).
 
-Date: 2026-04-16
+Regression checklist:
 
-Environment:
-
-- branch: `dev`
-- install/check: `npm install` and `npm run check` passed
-- note: default `8787` was already occupied in local machine, so acceptance run used `PORT=8899` and `PORT=8900`
-
-Regression results:
-
-- `/console` accessibility
-  - fixed route mapping in backend
-  - `GET /console` now returns redirect (`301`) to `/console/`, and console static page is reachable
-- R2/R3 consent gate
-  - `POST /api/risk-events` with `risk_level=R3` and non-granted consent returns `403` with `error_code=CONSENT_REQUIRED`
-- risk-events multi-filter query
-  - `GET /api/risk-events` with `risk_level + channel_type + from + to` correctly returns narrowed events
-- CSV export fields
-  - `GET /api/risk-events/export.csv` includes required columns:
-    `event_id,timestamp,risk_level,channel_type,consent_state`
-- finance live/fallback
-  - fallback verified on instance without `FINANCE_UPSTREAM_URL`:
-    returns mock data with `error_code=UPSTREAM_UNAVAILABLE`
-  - live verified on instance with `FINANCE_UPSTREAM_URL=http://localhost:8901`:
-    returns upstream data and marks `data_source=upstream`
->>>>>>> 71633de (Document dev regression acceptance results for B-machine.)
+- `/console` loads from the backend static route
+- R2/R3 consent gate returns `403` with `CONSENT_REQUIRED` when consent is not granted
+- `GET /api/risk-events` supports filters (`risk_level`, `channel_type`, `from`, `to`, `source`)
+- CSV export includes the expected columns
+- Finance endpoint returns live data when configured, otherwise mock fallback with `UPSTREAM_UNAVAILABLE`
