@@ -8,22 +8,31 @@
   </head>
   <body>
     <main class="container">
-      <h1>Campus Support Console</h1>
+      <h1 id="pageTitle">Campus Support Console</h1>
       <div class="card">
-        <strong>Tip:</strong> use the backend port printed in your terminal (for example from <code>npm run demo</code>).
-        Example: <code>http://localhost:8788/console</code> (the port may differ from 8787).
+        <strong id="tipLabel">Tip:</strong>
+        <span id="tipText"
+          >use the backend port printed in your terminal (for example from <code>npm run demo</code>). Example:
+          <code>http://localhost:8788/console</code> (the port may differ from 8787).</span
+        >
       </div>
 
       <section class="card">
-        <h2>Query & filters</h2>
+        <h2 id="h2_filters">Query & filters</h2>
         <div class="filters">
-          <label for="apiBaseUrl">Backend URL</label>
+          <label for="languageSelect" id="label_language">Language / 语言</label>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+
+          <label for="apiBaseUrl" id="label_backend_url">Backend URL</label>
           <input id="apiBaseUrl" type="text" placeholder="http://localhost:8787" />
 
-          <label for="apiKey">API key (optional)</label>
+          <label for="apiKey" id="label_api_key">API key (optional)</label>
           <input id="apiKey" type="text" placeholder="x-api-key value" />
 
-          <label for="riskLevel">Risk tier</label>
+          <label for="riskLevel" id="label_risk_tier">Risk tier</label>
           <select id="riskLevel">
             <option value="">All</option>
             <option value="R1">R1</option>
@@ -31,7 +40,7 @@
             <option value="R3">R3</option>
           </select>
 
-          <label for="channelType">Channel</label>
+          <label for="channelType" id="label_channel">Channel</label>
           <select id="channelType">
             <option value="">All</option>
             <option value="work">work</option>
@@ -39,7 +48,7 @@
             <option value="mixed">mixed</option>
           </select>
 
-          <label for="sourceFilter">Event source</label>
+          <label for="sourceFilter" id="label_source">Event source</label>
           <select id="sourceFilter">
             <option value="">All</option>
             <option value="browser">browser</option>
@@ -48,13 +57,13 @@
             <option value="demo">demo</option>
           </select>
 
-          <label for="studentSessionId">Student session ID</label>
+          <label for="studentSessionId" id="label_session">Student session ID</label>
           <input id="studentSessionId" type="text" placeholder="student_..." />
 
-          <label for="fromDate">From</label>
+          <label for="fromDate" id="label_from">From</label>
           <input id="fromDate" type="datetime-local" />
 
-          <label for="toDate">To</label>
+          <label for="toDate" id="label_to">To</label>
           <input id="toDate" type="datetime-local" />
         </div>
         <div class="actions">
@@ -65,53 +74,53 @@
           <button id="seedDemoBtn">Load demo dataset</button>
           <button id="resetDemoBtn">Clear demo dataset</button>
         </div>
-        <label class="inline-checkbox">
+        <label class="inline-checkbox" id="label_auto_refresh">
           <input id="autoRefresh" type="checkbox" />
           Auto refresh every 8 seconds
         </label>
       </section>
 
       <section class="card">
-        <h2>Summary</h2>
+        <h2 id="h2_summary">Summary</h2>
         <div id="summaryCards" class="summary-grid">
           <article class="summary-card">
-            <h3>Total support events</h3>
+            <h3 id="summary_total_label">Total support events</h3>
             <p id="totalEvents">0</p>
           </article>
           <article class="summary-card">
-            <h3>Risk tiers</h3>
+            <h3 id="summary_risk_label">Risk tiers</h3>
             <p id="riskSummary">R1:0 | R2:0 | R3:0</p>
           </article>
           <article class="summary-card">
-            <h3>Channels</h3>
+            <h3 id="summary_channel_label">Channels</h3>
             <p id="channelSummary">work:0 | finance:0 | mixed:0</p>
           </article>
           <article class="summary-card">
-            <h3>Consent states</h3>
+            <h3 id="summary_consent_label">Consent states</h3>
             <p id="consentSummary">granted:0 | revoked:0 | not_granted:0</p>
           </article>
           <article class="summary-card">
-            <h3>Event sources</h3>
+            <h3 id="summary_source_label">Event sources</h3>
             <p id="sourceSummary">browser:0 | network:0 | integration:0 | demo:0</p>
           </article>
         </div>
       </section>
 
       <section class="card">
-        <h2>Support events</h2>
+        <h2 id="h2_events">Support events</h2>
         <div id="meta">No support events loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Event ID</th>
-              <th>Timestamp</th>
-              <th>Session</th>
-              <th>Risk tier</th>
-              <th>Channel</th>
-              <th>Source</th>
-              <th>Consent</th>
-              <th>Why flagged</th>
-              <th>Why recommended</th>
+              <th id="th_event_id">Event ID</th>
+              <th id="th_timestamp">Timestamp</th>
+              <th id="th_session">Session</th>
+              <th id="th_risk">Risk tier</th>
+              <th id="th_channel">Channel</th>
+              <th id="th_source">Source</th>
+              <th id="th_consent">Consent</th>
+              <th id="th_why_flagged">Why flagged</th>
+              <th id="th_why_recommended">Why recommended</th>
             </tr>
           </thead>
           <tbody id="eventsBody"></tbody>
@@ -119,18 +128,18 @@
       </section>
 
       <section class="card">
-        <h2>Consent change log</h2>
+        <h2 id="h2_consent_log">Consent change log</h2>
         <div id="consentMeta">No consent events loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Consent record ID</th>
-              <th>Timestamp</th>
-              <th>Session</th>
-              <th>Who</th>
-              <th>State</th>
-              <th>Scopes</th>
-              <th>Note</th>
+              <th id="th_consent_id">Consent record ID</th>
+              <th id="th_consent_ts">Timestamp</th>
+              <th id="th_consent_session">Session</th>
+              <th id="th_consent_actor">Who</th>
+              <th id="th_consent_state">State</th>
+              <th id="th_consent_scopes">Scopes</th>
+              <th id="th_consent_note">Note</th>
             </tr>
           </thead>
           <tbody id="consentBody"></tbody>
@@ -138,17 +147,17 @@
       </section>
 
       <section class="card">
-        <h2>Consent snapshot</h2>
+        <h2 id="h2_consent_snapshot">Consent snapshot</h2>
         <div id="consentProfileMeta">No consent profiles loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Session</th>
-              <th>State</th>
-              <th>Scopes</th>
-              <th>Updated At</th>
-              <th>Updated By</th>
-              <th>Reason</th>
+              <th id="th_profile_session">Session</th>
+              <th id="th_profile_state">State</th>
+              <th id="th_profile_scopes">Scopes</th>
+              <th id="th_profile_updated_at">Updated At</th>
+              <th id="th_profile_updated_by">Updated By</th>
+              <th id="th_profile_reason">Reason</th>
             </tr>
           </thead>
           <tbody id="consentProfilesBody"></tbody>
@@ -156,7 +165,7 @@
       </section>
 
       <section class="card">
-        <h2>Student timeline</h2>
+        <h2 id="h2_timeline">Student timeline</h2>
         <div class="actions">
           <button id="loadStudentHistoryBtn">Load student timeline</button>
         </div>
@@ -165,32 +174,32 @@
       </section>
 
       <section class="card">
-        <h2>Student support content</h2>
+        <h2 id="h2_support">Student support content</h2>
         <div id="supportMeta">No support resources loaded yet.</div>
         <div class="panel-grid">
           <article class="panel-card">
-            <h3>Education</h3>
+            <h3 id="h3_education">Education</h3>
             <div id="educationResources">No education resources loaded yet.</div>
           </article>
           <article class="panel-card">
-            <h3>Wellbeing</h3>
+            <h3 id="h3_wellbeing">Wellbeing</h3>
             <div id="wellbeingResources">No wellbeing resources loaded yet.</div>
           </article>
         </div>
       </section>
 
       <section class="card">
-        <h2>Network safety signals</h2>
+        <h2 id="h2_network">Network safety signals</h2>
         <div id="networkMeta">No network signals loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Signal ID</th>
-              <th>Session</th>
-              <th>Observed At</th>
-              <th>Category</th>
-              <th>L7 Signal</th>
-              <th>Confidence</th>
+              <th id="th_sig_id">Signal ID</th>
+              <th id="th_sig_session">Session</th>
+              <th id="th_sig_observed">Observed At</th>
+              <th id="th_sig_category">Category</th>
+              <th id="th_sig_l7">L7 Signal</th>
+              <th id="th_sig_conf">Confidence</th>
             </tr>
           </thead>
           <tbody id="networkBody"></tbody>
@@ -198,17 +207,17 @@
       </section>
 
       <section class="card">
-        <h2>Governance audit chain</h2>
+        <h2 id="h2_audit">Governance audit chain</h2>
         <div id="auditMeta">No audit events loaded yet.</div>
         <table>
           <thead>
             <tr>
-              <th>Audit ID</th>
-              <th>Timestamp</th>
-              <th>Actor</th>
-              <th>Action</th>
-              <th>Resource</th>
-              <th>Hash Chain</th>
+              <th id="th_audit_id">Audit ID</th>
+              <th id="th_audit_ts">Timestamp</th>
+              <th id="th_audit_actor">Actor</th>
+              <th id="th_audit_action">Action</th>
+              <th id="th_audit_resource">Resource</th>
+              <th id="th_audit_chain">Hash Chain</th>
             </tr>
           </thead>
           <tbody id="auditBody"></tbody>
