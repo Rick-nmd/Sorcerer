@@ -22,6 +22,11 @@ function buildFinanceRecommendation(riskLevel, apr) {
     title: "Licensed Education Finance Option",
     provider_name: "Regulated Bank Channel",
     apr: Number(apr) || null,
+    term_months: 12,
+    eligibility: "Full-time student with valid enrollment proof.",
+    integration_status: "local_demo",
+    institution_verified: false,
+    application_url: "",
     next_action: "Compare contract APR and total payment before any approval step.",
     why_recommended: [
       "Regulated institution with transparent contract terms.",
@@ -49,6 +54,11 @@ export function normalizeRemoteRecommendations({ riskLevel, recommendations }) {
     title: item.title || "Recommendation",
     provider_name: item.provider_name || "Unknown provider",
     apr: typeof item.apr === "number" ? item.apr : null,
+    term_months: Number(item.term_months || item.months || 12),
+    eligibility: item.eligibility || "See provider requirements.",
+    integration_status: item.integration_status || "unknown",
+    institution_verified: Boolean(item.institution_verified),
+    application_url: item.application_url || "",
     next_action: item.next_action || "Review details before proceeding.",
     why_recommended:
       item.why_recommended && item.why_recommended.length

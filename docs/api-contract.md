@@ -106,6 +106,16 @@ Purpose: work-study options list (mock/static in MVP+).
 
 Purpose: licensed finance options.
 
+Student-visible fields:
+
+- `provider_name`
+- `apr`
+- `term_months`
+- `eligibility`
+- `integration_status`
+- `institution_verified`
+- `application_url`
+
 For MVP+:
 
 - one semi-real upstream path (if available)

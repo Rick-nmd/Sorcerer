@@ -37,6 +37,7 @@ From repository root:
 - R2/R3 triggers 15-second cooldown panel.
 - Recommendation cards include work + finance channels for R2/R3.
 - Recommendation cards show `Data Source` (`live`/`mock`/`local`).
+- Regular channel panel shows institution status, eligibility, term, and official apply link.
 - Cost transparency panel shows monthly/total/overdue estimates.
 - Explainability panel merges rule triggers + self-check notes.
 - `Upload Event` receives backend response with envelope fields.

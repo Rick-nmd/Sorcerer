@@ -27,6 +27,7 @@ const ui = {
   costOutput: document.getElementById("costOutput"),
   explainOutput: document.getElementById("explainOutput"),
   recommendationOutput: document.getElementById("recommendationOutput"),
+  regularChannelOutput: document.getElementById("regularChannelOutput"),
   uploadOutput: document.getElementById("uploadOutput")
 };
 
@@ -58,6 +59,46 @@ function renderRecommendations(recommendations) {
       </article>
     `
     )
+    .join("");
+}
+
+function safeUrl(raw) {
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+      return parsed.toString();
+    }
+    return "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function renderRegularChannels(recommendations) {
+  const regular = (recommendations || []).filter((item) => item.channel_type === "finance");
+  if (!regular.length) {
+    ui.regularChannelOutput.textContent = "No regular finance channel available in this scenario.";
+    return;
+  }
+
+  ui.regularChannelOutput.innerHTML = regular
+    .map((item) => {
+      const appUrl = safeUrl(item.application_url);
+      return `
+      <article class="recommendation">
+        <h3>${item.title}</h3>
+        <p><strong>Provider:</strong> ${item.provider_name}</p>
+        <p><strong>APR:</strong> ${item.apr ?? "-"}%</p>
+        <p><strong>Term:</strong> ${item.term_months || "-"} months</p>
+        <p><strong>Eligibility:</strong> ${item.eligibility || "-"}</p>
+        <p><strong>Integration Status:</strong> ${item.integration_status || "-"}</p>
+        <p><strong>Verified:</strong> ${item.institution_verified ? "yes" : "pending verification"}</p>
+        <p><strong>Source:</strong> ${item.data_source || "unknown"}</p>
+        ${appUrl ? `<a href="${appUrl}" target="_blank" rel="noopener noreferrer">Open official application link</a>` : "<p><em>Official application link unavailable in current environment.</em></p>"}
+      </article>
+    `;
+    })
     .join("");
 }
 
@@ -256,6 +297,7 @@ function initialize() {
     renderCostOutput(costSnapshot);
     renderExplainability({ analysis: latestAnalysis, selfCheckNotes, costSnapshot });
     renderRecommendations(latestRecommendations);
+    renderRegularChannels(latestRecommendations);
     updateInterventionBanner(latestAnalysis.risk_level);
     ui.uploadOutput.textContent = `Recommendation source: ${latestRecommendationSource}`;
   });
