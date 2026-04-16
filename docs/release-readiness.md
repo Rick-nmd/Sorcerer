@@ -32,15 +32,22 @@ Provide a unified A+B demo branch that can be run and presented with minimal set
   - R2/R3 with `consent_state != granted` returns `403` + `CONSENT_REQUIRED`
 - Event flow:
   - Student event upload appears in school console list
+- Student self-service:
+  - layered consent changes appear in consent audit and consent profile views
+  - `session_id` drilldown shows the same student's event and consent history
 - Export:
   - `/api/risk-events/export.csv` returns CSV with expected columns
 - Alternative channels:
   - `work-study` endpoint returns options
   - `finance` endpoint returns live data when available and mock fallback otherwise
+- Support and governance:
+  - support resources load in student and school views
+  - network signals and audit trail are visible in the school console
 
 ## End-to-End Script Order
 
 1. Run R1 scenario from `docs/demo-scenarios.md`.
 2. Run R2 scenario and verify uploaded event appears in console.
-3. Run R3 scenario and verify consent gate behavior.
-4. Export CSV and include in defense package.
+3. Change layered consent and verify consent audit/profile updates.
+4. Run R3 scenario and verify consent gate behavior.
+5. Export CSV and include in defense package.

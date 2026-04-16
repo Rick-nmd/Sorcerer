@@ -20,6 +20,7 @@ function defaultState() {
   return {
     riskEvents: [],
     consentAuditEvents: [],
+    consentProfiles: [],
     financeProviderRegistry: [],
     financeOffers: [],
     networkSignals: [],
@@ -124,6 +125,36 @@ function appendAuditEvent({ actor, action, resource, detail }) {
   const record = { ...payload, hash };
   state.auditEvents.push(record);
   state.lastAuditHash = hash;
+}
+
+function normalizeScopes(scopes = {}) {
+  return {
+    telemetry: Boolean(scopes.telemetry),
+    school_support: Boolean(scopes.school_support),
+    partner_offers: Boolean(scopes.partner_offers)
+  };
+}
+
+function upsertConsentProfile({ sessionId, consentState, scopes, updatedBy, reason, note }) {
+  if (!sessionId) {
+    return null;
+  }
+  const profile = {
+    session_id: sessionId,
+    consent_state: consentState,
+    scopes: normalizeScopes(scopes),
+    updated_at: new Date().toISOString(),
+    updated_by: updatedBy || "student",
+    reason: reason || "",
+    note: note || ""
+  };
+  const existingIndex = state.consentProfiles.findIndex((item) => item.session_id === sessionId);
+  if (existingIndex >= 0) {
+    state.consentProfiles[existingIndex] = profile;
+  } else {
+    state.consentProfiles.push(profile);
+  }
+  return profile;
 }
 
 function isInvalidPayload(payload) {
@@ -241,6 +272,43 @@ function buildMockWorkStudyOptions() {
   ];
 }
 
+function buildSupportResources() {
+  return {
+    education: [
+      {
+        resource_id: "edu_001",
+        title: "How to spot predatory loan language",
+        description: "Review urgent-callout phrases, hidden fees, rollover pressure, and fake student discounts.",
+        steps: ["Pause before submit", "Compare total repayment", "Verify provider identity"],
+        url: "https://consumer.ftc.gov/"
+      },
+      {
+        resource_id: "edu_002",
+        title: "Three-question borrowing self-check",
+        description: "Check whether the need is urgent, repayment is stable, and lower-risk alternatives were tried first.",
+        steps: ["Need or impulse?", "Stable repayment source?", "Tried campus alternatives?"],
+        url: "https://www.consumerfinance.gov/"
+      }
+    ],
+    wellbeing: [
+      {
+        resource_id: "well_001",
+        title: "Campus counseling and stress support",
+        description: "Financial stress can escalate impulsive choices. Reach out to a counselor or trusted advisor before borrowing.",
+        steps: ["Contact counseling center", "Tell a mentor", "Take a cooldown period"],
+        url: "https://findahelpline.com/"
+      },
+      {
+        resource_id: "well_002",
+        title: "Crisis and peer-support options",
+        description: "Use crisis or peer support resources if loan pressure is tied to panic, threats, or emotional distress.",
+        steps: ["Call local crisis line", "Use peer support", "Escalate to school support team"],
+        url: "https://www.opencounseling.com/suicide-hotlines"
+      }
+    ]
+  };
+}
+
 function buildRiskSummary(items) {
   const summary = {
     total_events: items.length,
@@ -337,11 +405,13 @@ app.post("/api/risk-events", (req, res) => {
 
   const normalized = {
     event_id: payload.event_id,
+    session_id: payload.session_id || "",
     timestamp: payload.timestamp,
     risk_level: payload.risk_level,
     why_flagged: payload.why_flagged || [],
     recommended_action: payload.recommended_action || "",
     consent_state: consentState,
+    consent_scopes: normalizeScopes(payload.consent_scopes),
     channel_type: payload.channel_type || "work",
     why_recommended: payload.why_recommended || [],
     source: payload.source || "browser",
@@ -440,6 +510,10 @@ app.get("/api/channels/finance", async (_req, res) => {
   }
 });
 
+app.get("/api/support/resources", (_req, res) => {
+  return res.json(buildEnvelope(true, "OK", buildSupportResources()));
+});
+
 app.post("/api/consent-events", (req, res) => {
   const payload = req.body || {};
   const consentState = payload.consent_state;
@@ -449,19 +523,34 @@ app.post("/api/consent-events", (req, res) => {
   const event = {
     consent_event_id: `consent_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     timestamp: new Date().toISOString(),
+    session_id: payload.session_id || "",
     actor: payload.actor || "student",
     consent_state: consentState,
-    note: payload.note || ""
+    note: payload.note || "",
+    reason: payload.reason || "",
+    scopes: normalizeScopes(payload.scopes)
   };
   state.consentAuditEvents.push(event);
+  const profile = upsertConsentProfile({
+    sessionId: event.session_id,
+    consentState: event.consent_state,
+    scopes: event.scopes,
+    updatedBy: event.actor,
+    reason: event.reason,
+    note: event.note
+  });
   appendAuditEvent({
     actor: event.actor,
     action: "consent_state_updated",
     resource: event.consent_event_id,
-    detail: { consent_state: event.consent_state }
+    detail: {
+      consent_state: event.consent_state,
+      session_id: event.session_id,
+      scopes: event.scopes
+    }
   });
   persistState();
-  return res.status(201).json(buildEnvelope(true, "Consent event recorded", event));
+  return res.status(201).json(buildEnvelope(true, "Consent event recorded", { event, profile }));
 });
 
 app.get("/api/consent-events", requireRole(["admin", "school", "demo"]), (req, res) => {
@@ -470,10 +559,47 @@ app.get("/api/consent-events", requireRole(["admin", "school", "demo"]), (req, r
   return res.json(buildEnvelope(true, "OK", { items, total: state.consentAuditEvents.length, limit }));
 });
 
+app.get("/api/consent-profiles", requireRole(["admin", "school", "demo"]), (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 500);
+  const items = state.consentProfiles.slice(-limit).reverse();
+  return res.json(buildEnvelope(true, "OK", { items, total: state.consentProfiles.length, limit }));
+});
+
 app.get("/api/audit-events", requireRole(["admin"]), (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 1000);
   const items = state.auditEvents.slice(-limit).reverse();
   return res.json(buildEnvelope(true, "OK", { items, total: state.auditEvents.length, limit }));
+});
+
+app.get("/api/student/consent-profile", (req, res) => {
+  const sessionId = String(req.query.session_id || "").trim();
+  if (!sessionId) {
+    return res.status(400).json(buildEnvelope(false, "Missing session_id", null, "INVALID_QUERY"));
+  }
+  const profile = state.consentProfiles.find((item) => item.session_id === sessionId) || null;
+  return res.json(buildEnvelope(true, "OK", profile));
+});
+
+app.get("/api/student/history", (req, res) => {
+  const sessionId = String(req.query.session_id || "").trim();
+  if (!sessionId) {
+    return res.status(400).json(buildEnvelope(false, "Missing session_id", null, "INVALID_QUERY"));
+  }
+  const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+  const riskEvents = state.riskEvents.filter((item) => item.session_id === sessionId).slice(-limit).reverse();
+  const consentEvents = state.consentAuditEvents
+    .filter((item) => item.session_id === sessionId)
+    .slice(-limit)
+    .reverse();
+  const profile = state.consentProfiles.find((item) => item.session_id === sessionId) || null;
+  return res.json(
+    buildEnvelope(true, "OK", {
+      session_id: sessionId,
+      profile,
+      risk_events: riskEvents,
+      consent_events: consentEvents
+    })
+  );
 });
 
 app.post("/api/network/signals", requireRole(["admin", "network", "demo"]), (req, res) => {
@@ -605,6 +731,7 @@ app.post("/api/integrations/providers/:providerId/webhooks/offers", requireRole(
 app.post("/api/demo/seed", requireRole(["admin", "school", "demo"]), (_req, res) => {
   state.riskEvents.length = 0;
   state.consentAuditEvents.length = 0;
+  state.consentProfiles.length = 0;
   state.networkSignals.length = 0;
   state.financeProviderRegistry.length = 0;
   state.financeOffers.length = 0;
@@ -644,18 +771,32 @@ app.post("/api/demo/seed", requireRole(["admin", "school", "demo"]), (_req, res)
     {
       consent_event_id: `consent_seed_${Date.now()}_1`,
       timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+      session_id: "demo_student_seed",
       actor: "student",
       consent_state: "granted",
-      note: "Seeded demo consent grant."
+      note: "Seeded demo consent grant.",
+      reason: "Student allowed support follow-up.",
+      scopes: normalizeScopes({ telemetry: true, school_support: true, partner_offers: false })
     },
     {
       consent_event_id: `consent_seed_${Date.now()}_2`,
       timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+      session_id: "demo_student_seed",
       actor: "student",
       consent_state: "revoked",
-      note: "Seeded demo consent revoke."
+      note: "Seeded demo consent revoke.",
+      reason: "Student paused data sharing after review.",
+      scopes: normalizeScopes({ telemetry: false, school_support: false, partner_offers: false })
     }
   );
+  upsertConsentProfile({
+    sessionId: "demo_student_seed",
+    consentState: "revoked",
+    scopes: { telemetry: false, school_support: false, partner_offers: false },
+    updatedBy: "student",
+    reason: "Seeded final consent state",
+    note: "Latest seeded consent profile."
+  });
   persistState();
   return res.json(
     buildEnvelope(true, "Demo data seeded", {
@@ -668,6 +809,7 @@ app.post("/api/demo/seed", requireRole(["admin", "school", "demo"]), (_req, res)
 app.post("/api/demo/reset", requireRole(["admin", "school", "demo"]), (_req, res) => {
   state.riskEvents.length = 0;
   state.consentAuditEvents.length = 0;
+  state.consentProfiles.length = 0;
   state.networkSignals.length = 0;
   state.financeOffers.length = 0;
   state.financeProviderRegistry.length = 0;

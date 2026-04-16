@@ -25,7 +25,7 @@ body {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
 }
 
@@ -122,4 +122,51 @@ th {
 #meta {
   font-size: 13px;
   color: #4b5563;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.panel-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f9fafb;
+}
+
+.panel-card h3 {
+  margin-top: 0;
+}
+
+.resource-item {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+}
+
+.resource-item:last-child {
+  border-bottom: none;
+}
+
+.resource-item p {
+  margin: 4px 0;
+}
+
+pre {
+  white-space: pre-wrap;
+  background: #111827;
+  color: #e5e7eb;
+  padding: 12px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+@media (max-width: 800px) {
+  .filters,
+  .panel-grid,
+  .actions {
+    grid-template-columns: 1fr;
+  }
 }

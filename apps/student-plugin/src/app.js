@@ -1,7 +1,22 @@
-import { getApiBaseUrl, getApiKey, setApiBaseUrl, setApiKey } from "./config.js";
+import {
+  getApiBaseUrl,
+  getApiKey,
+  getConsentPreferences,
+  getOrCreateStudentSessionId,
+  setApiBaseUrl,
+  setApiKey,
+  setConsentPreferences
+} from "./config.js";
 import { analyzeRisk } from "./risk-engine.js";
 import { buildRecommendations, normalizeRemoteRecommendations } from "./recommendation-engine.js";
-import { fetchChannelRecommendations, uploadConsentEvent, uploadRiskEvent } from "./api-client.js";
+import {
+  fetchChannelRecommendations,
+  fetchStudentConsentProfile,
+  fetchStudentHistory,
+  fetchSupportResources,
+  uploadConsentEvent,
+  uploadRiskEvent
+} from "./api-client.js";
 
 const ui = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),
@@ -9,12 +24,20 @@ const ui = {
   consentNote: document.getElementById("consentNote"),
   saveApiBaseUrl: document.getElementById("saveApiBaseUrl"),
   syncConsentBtn: document.getElementById("syncConsentBtn"),
+  sessionMeta: document.getElementById("sessionMeta"),
   scenarioText: document.getElementById("scenarioText"),
   apr: document.getElementById("apr"),
   principal: document.getElementById("principal"),
   months: document.getElementById("months"),
   stage: document.getElementById("stage"),
   consent: document.getElementById("consent"),
+  scopeTelemetry: document.getElementById("scopeTelemetry"),
+  scopeSchoolSupport: document.getElementById("scopeSchoolSupport"),
+  scopePartnerOffers: document.getElementById("scopePartnerOffers"),
+  consentReason: document.getElementById("consentReason"),
+  saveConsentPrefsBtn: document.getElementById("saveConsentPrefsBtn"),
+  refreshHistoryBtn: document.getElementById("refreshHistoryBtn"),
+  consentSummaryOutput: document.getElementById("consentSummaryOutput"),
   selfCheckNeed: document.getElementById("selfCheckNeed"),
   selfCheckRepay: document.getElementById("selfCheckRepay"),
   selfCheckAlt: document.getElementById("selfCheckAlt"),
@@ -28,6 +51,9 @@ const ui = {
   explainOutput: document.getElementById("explainOutput"),
   recommendationOutput: document.getElementById("recommendationOutput"),
   regularChannelOutput: document.getElementById("regularChannelOutput"),
+  educationOutput: document.getElementById("educationOutput"),
+  wellbeingOutput: document.getElementById("wellbeingOutput"),
+  historyOutput: document.getElementById("historyOutput"),
   uploadOutput: document.getElementById("uploadOutput")
 };
 
@@ -35,6 +61,7 @@ let latestAnalysis = null;
 let latestRecommendations = [];
 let cooldownTimer = null;
 let latestRecommendationSource = "local";
+const studentSessionId = getOrCreateStudentSessionId();
 
 function createEventId() {
   return `event_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -102,6 +129,32 @@ function renderRegularChannels(recommendations) {
     .join("");
 }
 
+function getConsentScopes() {
+  return {
+    telemetry: ui.scopeTelemetry.checked,
+    school_support: ui.scopeSchoolSupport.checked,
+    partner_offers: ui.scopePartnerOffers.checked
+  };
+}
+
+function applyConsentScopes(scopes) {
+  ui.scopeTelemetry.checked = Boolean(scopes.telemetry);
+  ui.scopeSchoolSupport.checked = Boolean(scopes.school_support);
+  ui.scopePartnerOffers.checked = Boolean(scopes.partner_offers);
+}
+
+function summarizeConsent(scopes, consentState) {
+  const enabled = Object.entries(scopes)
+    .filter(([, isEnabled]) => isEnabled)
+    .map(([key]) => key.replaceAll("_", " "));
+  const summary = enabled.length ? enabled.join(", ") : "none";
+  ui.consentSummaryOutput.innerHTML = `
+    <strong>Consent state:</strong> ${consentState}<br/>
+    <strong>Granted scopes:</strong> ${summary}<br/>
+    <strong>Session:</strong> ${studentSessionId}
+  `;
+}
+
 function startCooldown(seconds) {
   if (cooldownTimer) {
     window.clearInterval(cooldownTimer);
@@ -136,6 +189,85 @@ function getScenarioInput() {
     },
     consent_state: ui.consent.value
   };
+}
+
+function renderResourceList(target, items, emptyMessage) {
+  if (!items.length) {
+    target.textContent = emptyMessage;
+    return;
+  }
+
+  target.innerHTML = items
+    .map((item) => {
+      const safeLink = safeUrl(item.url);
+      return `
+        <article class="resource-card">
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+          ${item.steps?.length ? `<p><strong>Next Steps:</strong> ${item.steps.join("; ")}</p>` : ""}
+          ${safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener noreferrer">Open resource</a>` : ""}
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderStudentHistory(history) {
+  ui.historyOutput.textContent = JSON.stringify(history, null, 2);
+}
+
+async function refreshStudentHistory() {
+  try {
+    const history = await fetchStudentHistory({
+      apiBaseUrl: getApiBaseUrl(),
+      sessionId: studentSessionId,
+      apiKey: getApiKey()
+    });
+    renderStudentHistory(history);
+  } catch (error) {
+    ui.historyOutput.textContent = `History load failed: ${error.message}`;
+  }
+}
+
+async function refreshConsentProfile() {
+  try {
+    const profile = await fetchStudentConsentProfile({
+      apiBaseUrl: getApiBaseUrl(),
+      sessionId: studentSessionId,
+      apiKey: getApiKey()
+    });
+    if (profile?.scopes) {
+      applyConsentScopes(profile.scopes);
+    }
+    if (profile?.consent_state) {
+      ui.consent.value = profile.consent_state;
+    }
+    summarizeConsent(getConsentScopes(), ui.consent.value);
+  } catch (_error) {
+    summarizeConsent(getConsentScopes(), ui.consent.value);
+  }
+}
+
+async function refreshSupportResources() {
+  try {
+    const payload = await fetchSupportResources({
+      apiBaseUrl: getApiBaseUrl(),
+      apiKey: getApiKey()
+    });
+    renderResourceList(
+      ui.educationOutput,
+      payload.education || [],
+      "No anti-fraud education content available."
+    );
+    renderResourceList(
+      ui.wellbeingOutput,
+      payload.wellbeing || [],
+      "No wellbeing support content available."
+    );
+  } catch (error) {
+    ui.educationOutput.textContent = `Education resources unavailable: ${error.message}`;
+    ui.wellbeingOutput.textContent = `Wellbeing resources unavailable: ${error.message}`;
+  }
 }
 
 function calculateCostSnapshot({ apr, principal, months }) {
@@ -208,14 +340,17 @@ function buildEventPayload() {
   const scenario = getScenarioInput();
   const costSnapshot = calculateCostSnapshot(scenario);
   const selfCheckNotes = getSelfCheckRiskNotes(scenario.self_check);
+  const consentScopes = getConsentScopes();
 
   return {
     event_id: createEventId(),
+    session_id: studentSessionId,
     timestamp: new Date().toISOString(),
     risk_level: latestAnalysis.risk_level,
     why_flagged: [...latestAnalysis.why_flagged, ...selfCheckNotes],
     recommended_action: latestAnalysis.recommended_action,
     consent_state: ui.consent.value,
+    consent_scopes: consentScopes,
     channel_type: latestAnalysis.channel_type,
     why_recommended: latestRecommendations.flatMap((item) => item.why_recommended),
     cost_snapshot: costSnapshot
@@ -242,8 +377,15 @@ function updateInterventionBanner(riskLevel) {
 }
 
 function initialize() {
+  const storedScopes = getConsentPreferences();
   ui.apiBaseUrl.value = getApiBaseUrl();
   ui.apiKey.value = getApiKey();
+  applyConsentScopes(storedScopes);
+  ui.sessionMeta.innerHTML = `
+    <strong>Student Session ID:</strong> ${studentSessionId}<br/>
+    <strong>Purpose:</strong> links consent changes, analysis uploads, and student history in demo mode.
+  `;
+  summarizeConsent(storedScopes, ui.consent.value);
 
   ui.saveApiBaseUrl.addEventListener("click", () => {
     setApiBaseUrl(ui.apiBaseUrl.value);
@@ -256,16 +398,49 @@ function initialize() {
       const result = await uploadConsentEvent({
         apiBaseUrl: getApiBaseUrl(),
         consentPayload: {
+          session_id: studentSessionId,
           consent_state: ui.consent.value,
           actor: "student",
-          note: ui.consentNote.value || ""
+          note: ui.consentNote.value || "",
+          reason: ui.consentReason.value || "",
+          scopes: getConsentScopes()
         },
         apiKey: getApiKey()
       });
+      summarizeConsent(getConsentScopes(), ui.consent.value);
+      await refreshStudentHistory();
       ui.uploadOutput.textContent = `Consent sync result:\n${JSON.stringify(result, null, 2)}`;
     } catch (error) {
       ui.uploadOutput.textContent = `Consent sync failed: ${error.message}`;
     }
+  });
+
+  ui.saveConsentPrefsBtn.addEventListener("click", async () => {
+    const scopes = getConsentScopes();
+    setConsentPreferences(scopes);
+    summarizeConsent(scopes, ui.consent.value);
+    try {
+      await uploadConsentEvent({
+        apiBaseUrl: getApiBaseUrl(),
+        consentPayload: {
+          session_id: studentSessionId,
+          consent_state: ui.consent.value,
+          actor: "student",
+          note: ui.consentNote.value || "Saved layered consent preferences from plugin UI.",
+          reason: ui.consentReason.value || "",
+          scopes
+        },
+        apiKey: getApiKey()
+      });
+      await refreshStudentHistory();
+      ui.uploadOutput.textContent = "Layered consent preferences saved locally and synced to backend.";
+    } catch (error) {
+      ui.uploadOutput.textContent = `Preferences saved locally, but sync failed: ${error.message}`;
+    }
+  });
+
+  ui.refreshHistoryBtn.addEventListener("click", async () => {
+    await refreshStudentHistory();
   });
 
   ui.analyzeBtn.addEventListener("click", async () => {
@@ -299,6 +474,7 @@ function initialize() {
     renderRecommendations(latestRecommendations);
     renderRegularChannels(latestRecommendations);
     updateInterventionBanner(latestAnalysis.risk_level);
+    summarizeConsent(getConsentScopes(), ui.consent.value);
     ui.uploadOutput.textContent = `Recommendation source: ${latestRecommendationSource}`;
   });
 
@@ -315,11 +491,16 @@ function initialize() {
         eventPayload: payload,
         apiKey: getApiKey()
       });
+      await refreshStudentHistory();
       ui.uploadOutput.textContent = `${JSON.stringify(result, null, 2)}\n\nRecommendation source: ${latestRecommendationSource}`;
     } catch (error) {
       ui.uploadOutput.textContent = `Upload failed: ${error.message}`;
     }
   });
+
+  refreshConsentProfile();
+  refreshStudentHistory();
+  refreshSupportResources();
 }
 
 initialize();

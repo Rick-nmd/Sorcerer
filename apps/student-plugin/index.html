@@ -31,6 +31,11 @@
       </section>
 
       <section class="card">
+        <h2>Student Session</h2>
+        <div id="sessionMeta" class="muted">Initializing student session...</div>
+      </section>
+
+      <section class="card">
         <h2>Scenario Input</h2>
         <div class="grid">
           <label for="scenarioText">Page Text</label>
@@ -98,6 +103,44 @@
       </section>
 
       <section class="card">
+        <h2>Layered Consent</h2>
+        <div class="grid">
+          <div>
+            <label>Consent Scopes</label>
+            <div class="checkbox-group">
+              <label class="checkbox-row" for="scopeTelemetry">
+                <input id="scopeTelemetry" type="checkbox" checked />
+                <span>Browser telemetry for risk detection</span>
+              </label>
+              <label class="checkbox-row" for="scopeSchoolSupport">
+                <input id="scopeSchoolSupport" type="checkbox" checked />
+                <span>School support follow-up for high risk</span>
+              </label>
+              <label class="checkbox-row" for="scopePartnerOffers">
+                <input id="scopePartnerOffers" type="checkbox" />
+                <span>Receive verified partner finance offers</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label for="consentReason">Consent Change Reason</label>
+            <textarea
+              id="consentReason"
+              rows="5"
+              placeholder="Explain why the student granted, limited, or revoked consent..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="saveConsentPrefsBtn">Save Consent Preferences</button>
+          <button id="refreshHistoryBtn">Refresh Student History</button>
+        </div>
+        <div id="consentSummaryOutput" class="muted">
+          No layered consent summary yet.
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Risk Result</h2>
         <pre id="riskOutput">No analysis yet.</pre>
       </section>
@@ -124,6 +167,25 @@
         <div id="regularChannelOutput" class="recommendations">
           No regular channel info yet.
         </div>
+      </section>
+
+      <section class="card">
+        <h2>Safety Education</h2>
+        <div id="educationOutput" class="resource-list">
+          No education content loaded yet.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Wellbeing Support</h2>
+        <div id="wellbeingOutput" class="resource-list">
+          No wellbeing support content loaded yet.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Student History</h2>
+        <pre id="historyOutput">No student history loaded yet.</pre>
       </section>
 
       <section class="card">

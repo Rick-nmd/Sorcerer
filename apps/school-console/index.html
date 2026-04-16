@@ -35,6 +35,18 @@
             <option value="mixed">mixed</option>
           </select>
 
+          <label for="sourceFilter">Source</label>
+          <select id="sourceFilter">
+            <option value="">All</option>
+            <option value="browser">browser</option>
+            <option value="network">network</option>
+            <option value="integration">integration</option>
+            <option value="demo">demo</option>
+          </select>
+
+          <label for="studentSessionId">Student Session ID</label>
+          <input id="studentSessionId" type="text" placeholder="student_..." />
+
           <label for="fromDate">From</label>
           <input id="fromDate" type="datetime-local" />
 
@@ -74,6 +86,10 @@
             <h3>Consent</h3>
             <p id="consentSummary">granted:0 | revoked:0 | not_granted:0</p>
           </article>
+          <article class="summary-card">
+            <h3>Sources</h3>
+            <p id="sourceSummary">browser:0 | network:0 | integration:0 | demo:0</p>
+          </article>
         </div>
       </section>
 
@@ -85,8 +101,10 @@
             <tr>
               <th>Event ID</th>
               <th>Timestamp</th>
+              <th>Session</th>
               <th>Risk</th>
               <th>Channel</th>
+              <th>Source</th>
               <th>Consent</th>
               <th>Why Flagged</th>
               <th>Why Recommended</th>
@@ -104,12 +122,92 @@
             <tr>
               <th>Consent Event ID</th>
               <th>Timestamp</th>
+              <th>Session</th>
               <th>Actor</th>
               <th>State</th>
+              <th>Scopes</th>
               <th>Note</th>
             </tr>
           </thead>
           <tbody id="consentBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Consent Profiles</h2>
+        <div id="consentProfileMeta">No consent profiles loaded yet.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>State</th>
+              <th>Scopes</th>
+              <th>Updated At</th>
+              <th>Updated By</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="consentProfilesBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Student Session Drilldown</h2>
+        <div class="actions">
+          <button id="loadStudentHistoryBtn">Load Student History</button>
+        </div>
+        <div id="studentHistoryMeta">Enter a student session ID to inspect history.</div>
+        <pre id="studentHistoryOutput">No student history loaded yet.</pre>
+      </section>
+
+      <section class="card">
+        <h2>Support Resources Snapshot</h2>
+        <div id="supportMeta">No support resources loaded yet.</div>
+        <div class="panel-grid">
+          <article class="panel-card">
+            <h3>Education</h3>
+            <div id="educationResources">No education resources loaded yet.</div>
+          </article>
+          <article class="panel-card">
+            <h3>Wellbeing</h3>
+            <div id="wellbeingResources">No wellbeing resources loaded yet.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Network Signals</h2>
+        <div id="networkMeta">No network signals loaded yet.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Signal ID</th>
+              <th>Session</th>
+              <th>Observed At</th>
+              <th>Category</th>
+              <th>L7 Signal</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="networkBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Audit Trail</h2>
+        <div id="auditMeta">No audit events loaded yet.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Audit ID</th>
+              <th>Timestamp</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Resource</th>
+              <th>Hash Chain</th>
+            </tr>
+          </thead>
+          <tbody id="auditBody"></tbody>
         </table>
       </section>
     </main>

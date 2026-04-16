@@ -64,3 +64,21 @@ export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel, apiKe
   ]);
   return [...work, ...finance];
 }
+
+export async function fetchStudentConsentProfile({ apiBaseUrl, sessionId, apiKey = "" }) {
+  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  return getJson(`${baseUrl}/api/student/consent-profile?session_id=${encodeURIComponent(sessionId)}`, apiKey);
+}
+
+export async function fetchStudentHistory({ apiBaseUrl, sessionId, limit = 20, apiKey = "" }) {
+  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  return getJson(
+    `${baseUrl}/api/student/history?session_id=${encodeURIComponent(sessionId)}&limit=${encodeURIComponent(limit)}`,
+    apiKey
+  );
+}
+
+export async function fetchSupportResources({ apiBaseUrl, apiKey = "" }) {
+  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  return getJson(`${baseUrl}/api/support/resources`, apiKey);
+}

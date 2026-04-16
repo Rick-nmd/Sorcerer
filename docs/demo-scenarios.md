@@ -37,4 +37,16 @@
 1. B-machine runs backend and shares URL.
 2. A-machine sets `API_BASE_URL` in demo UI.
 3. Run scenarios in order R1 -> R2 -> R3.
-4. B-machine verifies event visibility in school console.
+4. Save layered consent scopes and verify audit/profile updates.
+5. B-machine verifies event visibility in school console and can drill into the same `session_id`.
+
+## Scenario 4 - Layered Consent and Student History
+
+- Student action:
+  - enable `telemetry` and `school_support`
+  - disable `partner_offers`
+  - add reason text and save preferences
+- Expected:
+  - backend records a consent audit event
+  - latest consent profile matches selected scopes
+  - school console can load the same `session_id` and view consent + risk history

@@ -121,3 +121,59 @@ pre {
 .recommendation a:hover {
   text-decoration: underline;
 }
+
+.checkbox-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin: 2px 0 0 0;
+}
+
+.resource-list {
+  display: grid;
+  gap: 10px;
+}
+
+.resource-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.resource-card h3 {
+  margin: 0 0 8px 0;
+}
+
+.resource-card p {
+  margin: 6px 0;
+}
+
+.resource-card a {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resource-card a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .grid,
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}

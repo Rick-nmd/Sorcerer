@@ -34,13 +34,16 @@ Production roadmap: `docs/production-integration-roadmap.md`
    - `npm install`
 2. Validate schemas:
    - `npm run check`
-3. Start backend placeholder server:
+3. Start backend server:
    - `npm run start`
-4. Start A-machine student demo:
+4. Open school console:
+   - `http://localhost:8787/console`
+5. Start A-machine student demo:
    - `npm run start:a`
-5. Run integrated smoke checks:
+6. Run integrated smoke checks:
    - `npm run smoke:dev`
 
 ## Scope
 
 See `docs/scope-mvp-plus.md` for MVP+ scope boundaries and done criteria.
+See `docs/defense-presentation-script.md` for the final presentation flow.

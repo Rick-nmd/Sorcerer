@@ -17,6 +17,7 @@ function assert(condition, message) {
 
 async function main() {
   const baseUrl = process.env.API_BASE_URL || "http://localhost:8787";
+  const studentSessionId = `smoke_student_${Date.now()}`;
   console.log(`[smoke] Base URL: ${baseUrl}`);
 
   const health = await requestJson(`${baseUrl}/health`);
@@ -43,13 +44,19 @@ async function main() {
 
   const okPayload = {
     event_id: `event_smoke_ok_${Date.now()}`,
+    session_id: studentSessionId,
     timestamp: new Date().toISOString(),
     risk_level: "R2",
     why_flagged: ["fill_stage"],
     recommended_action: "show_alternatives",
     consent_state: "granted",
     channel_type: "mixed",
-    why_recommended: ["income_first", "regulated_channel"]
+    why_recommended: ["income_first", "regulated_channel"],
+    consent_scopes: {
+      telemetry: true,
+      school_support: true,
+      partner_offers: false
+    }
   };
 
   const upload = await requestJson(`${baseUrl}/api/risk-events`, {
@@ -84,15 +91,54 @@ async function main() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      session_id: studentSessionId,
       consent_state: "revoked",
       actor: "student",
-      note: "smoke-check"
+      note: "smoke-check",
+      reason: "Testing layered consent",
+      scopes: {
+        telemetry: false,
+        school_support: false,
+        partner_offers: false
+      }
     })
   });
   assert(consentWrite.response.ok && consentWrite.json.success, "Consent audit write failed");
   const consentRead = await requestJson(`${baseUrl}/api/consent-events?limit=5`);
   assert(consentRead.response.ok && consentRead.json.success, "Consent audit read failed");
+  const consentProfiles = await requestJson(`${baseUrl}/api/consent-profiles?limit=5`);
+  assert(consentProfiles.response.ok && consentProfiles.json.success, "Consent profile read failed");
   console.log("[smoke] Consent audit endpoint checks passed");
+
+  const studentProfile = await requestJson(
+    `${baseUrl}/api/student/consent-profile?session_id=${encodeURIComponent(studentSessionId)}`
+  );
+  assert(studentProfile.response.ok && studentProfile.json.success, "Student consent profile read failed");
+  const studentHistory = await requestJson(
+    `${baseUrl}/api/student/history?session_id=${encodeURIComponent(studentSessionId)}&limit=5`
+  );
+  assert(studentHistory.response.ok && studentHistory.json.success, "Student history read failed");
+  const supportResources = await requestJson(`${baseUrl}/api/support/resources`);
+  assert(supportResources.response.ok && supportResources.json.success, "Support resources read failed");
+  console.log("[smoke] Student self-service and support endpoints passed");
+
+  const networkWrite = await requestJson(`${baseUrl}/api/network/signals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: studentSessionId,
+      domain_hash: "demo_hash_001",
+      category: "loan",
+      l7_signal: "urgent-loan-traffic",
+      confidence: 0.91
+    })
+  });
+  assert(networkWrite.response.ok && networkWrite.json.success, "Network signal write failed");
+  const networkRead = await requestJson(`${baseUrl}/api/network/signals?limit=5`);
+  assert(networkRead.response.ok && networkRead.json.success, "Network signal read failed");
+  const auditRead = await requestJson(`${baseUrl}/api/audit-events?limit=5`);
+  assert(auditRead.response.ok && auditRead.json.success, "Audit trail read failed");
+  console.log("[smoke] Governance endpoint checks passed");
 
   const seed = await requestJson(`${baseUrl}/api/demo/seed`, {
     method: "POST",
