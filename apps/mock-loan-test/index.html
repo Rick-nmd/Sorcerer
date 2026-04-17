@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LoanShield Mock Lending Page</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f7fb;
+        color: #0f172a;
+      }
+      .wrap {
+        max-width: 920px;
+        margin: 28px auto;
+        padding: 0 16px 40px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dbe2ef;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      h1,
+      h2 {
+        margin: 0 0 12px;
+      }
+      .loan-copy {
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        padding: 3px 8px;
+        border-radius: 999px;
+        margin-right: 8px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .field label {
+        font-size: 14px;
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      .field textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+      .cta {
+        margin-top: 14px;
+        border: 0;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .hint {
+        font-size: 13px;
+        color: #475569;
+      }
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>校园备用金（模拟测试页）</h1>
+        <p class="hint">用于测试浏览器插件自动识别和弹窗流程（仅演示，不是真实借贷产品）。</p>
+        <p>
+          <span class="badge">0抵押0担保</span>
+          <span class="badge">3分钟到账</span>
+          <span class="badge">学生专享</span>
+        </p>
+        <div class="loan-copy">
+【校园备用金】学生专享低息借款，无抵押、审核快，应急超方便！
+借款 8000 元，分 12 期，每月固定还款 710 元。
+放款时一次性收取 120 元资料审核费，无其他额外费用，全程清晰透明。
+首月优惠，日息仅 0.02% 起，随借随还，点击立即申请。
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>申请表单（触发表单填写行为）</h2>
+        <p class="hint">在下面任意输入框中点击并输入内容，插件应自动触发降温问卷与后续弹窗。</p>
+
+        <form>
+          <div class="grid">
+            <div class="field">
+              <label for="name">姓名</label>
+              <input id="name" placeholder="请输入姓名" />
+            </div>
+            <div class="field">
+              <label for="student-id">学号</label>
+              <input id="student-id" placeholder="请输入学号" />
+            </div>
+            <div class="field">
+              <label for="phone">手机号</label>
+              <input id="phone" placeholder="请输入手机号" />
+            </div>
+            <div class="field">
+              <label for="amount">申请金额</label>
+              <select id="amount">
+                <option>¥1000 以下</option>
+                <option>¥1000 - ¥5000</option>
+                <option selected>¥5000 - ¥10000</option>
+                <option>¥10000 - ¥50000</option>
+                <option>¥50000 以上</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px">
+            <label for="purpose">借款用途说明</label>
+            <textarea id="purpose" placeholder="例如：生活费、培训费、电子设备购买等"></textarea>
+          </div>
+          <button class="cta" type="button">立即提现</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
