@@ -53,7 +53,12 @@
     return m ? Number(String(m[1]).replace(/,/g, "")) : null;
   }
   function detectPeriods(text) {
-    const m = /(\d{1,3})\s*(?:期|个月|months?)/i.exec(text);
+    let m = /分\s*(\d{1,3})\s*(?:期|个月)/i.exec(text);
+    if (m) return Number(m[1]);
+    m = /(?:共|总计|合计)\s*(\d{1,3})\s*(?:期|个月)/i.exec(text);
+    if (m) return Number(m[1]);
+    // Avoid matching "前3期免息" as total term: require not immediately after 前
+    m = /(?<!前)(\d{1,3})\s*(?:期|个月|months?)/i.exec(text);
     return m ? Number(m[1]) : null;
   }
   function detectUpfrontFees(text) {
@@ -140,11 +145,14 @@
     const periods = detectPeriods(text);
     const fees = detectUpfrontFees(text);
     const upfrontFee = fees.reduce((s, x) => s + x, 0);
-    const disbursed = contract && upfrontFee ? Math.max(contract - upfrontFee, 0) : contract || 0;
+    const disbursed =
+      contract && upfrontFee > 0 ? Math.max(contract - upfrontFee, 0) : contract != null ? contract : 0;
     const baseApr = detectBaseApr(text);
-    const effectiveApr = irrAnnual(disbursed, monthly, periods);
+    const effectiveApr =
+      contract != null && monthly != null && periods != null && disbursed > 0
+        ? irrAnnual(disbursed, monthly, periods)
+        : null;
 
-    if (!contract || !monthly || !periods || !effectiveApr) return null;
     const hitTerms = collectKeywordMatches(text, [
       { label: "秒批/快速到账", re: /秒批|快速到账|秒放|立即放款|3分钟到账/i },
       { label: "无抵押/无担保", re: /无抵押|无担保|0抵押|0担保/i },
@@ -153,8 +161,44 @@
       { label: "应急诱导", re: /应急|急用|周转/i },
       { label: "模糊收费", re: /费用另算|少量费用|无任何费用/i }
     ]);
-    const riskLevel = computeRisk(effectiveApr, upfrontFee > 0, hitTerms);
-    return { text, contract, monthly, periods, upfrontFee, disbursed, baseApr, effectiveApr, hitTerms, riskLevel };
+
+    const partial = !contract || !monthly || !periods || effectiveApr == null;
+    let riskLevel;
+    if (!partial) {
+      riskLevel = computeRisk(effectiveApr, upfrontFee > 0, hitTerms);
+    } else {
+      riskLevel = hitTerms.length >= 2 || upfrontFee > 0 ? "R3" : "R2";
+    }
+
+    return {
+      text,
+      contract,
+      monthly,
+      periods,
+      upfrontFee,
+      disbursed,
+      baseApr,
+      effectiveApr,
+      hitTerms,
+      riskLevel,
+      partial
+    };
+  }
+
+  function fmtMoney(v) {
+    if (v == null || Number.isNaN(Number(v))) return "N/A";
+    return String(v);
+  }
+
+  function fmtAprPct(v) {
+    if (v == null || Number.isNaN(Number(v))) {
+      return "N/A（页面未识别完整本金/月供/期数，无法计算 IRR）";
+    }
+    return `${Number(v).toFixed(2)}%`;
+  }
+
+  function flowStorageKey() {
+    return `loanshield:auto:flow:v3:${location.origin}${location.pathname}`;
   }
 
   function buildSelect(id, options) {
@@ -207,15 +251,26 @@
   }
 
   async function submitSchoolEvent(report, answers) {
+    const hasFull =
+      report.contract != null &&
+      report.monthly != null &&
+      report.periods != null &&
+      report.effectiveApr != null;
+    const totalRepay =
+      hasFull && report.monthly != null && report.periods != null
+        ? report.monthly * report.periods
+        : null;
+    const interest =
+      hasFull && totalRepay != null ? totalRepay - (report.disbursed || 0) : null;
     const payload = {
       event_id: `auto_${Date.now()}`,
       session_id: `auto_session_${location.host.replace(/[^a-zA-Z0-9_]/g, "_")}`,
       timestamp: new Date().toISOString(),
       risk_level: report.riskLevel,
       why_flagged: [
-        `Auto trigger from lending form behavior on ${location.host}`,
-        `Contract ${report.contract}, upfront fee ${report.upfrontFee}, disbursed ${report.disbursed}, monthly ${report.monthly}, periods ${report.periods}`,
-        `Base APR ${report.baseApr != null ? report.baseApr.toFixed(2) + "%" : "n/a"}, Effective APR ${report.effectiveApr.toFixed(2)}%`
+        `Auto trigger from lending form behaviour on ${location.host}`,
+        `Parse: contract=${report.contract}, upfront=${report.upfrontFee}, disbursed=${report.disbursed}, monthly=${report.monthly}, periods=${report.periods}, partial=${Boolean(report.partial)}`,
+        `Base APR ${report.baseApr != null ? report.baseApr.toFixed(2) + "%" : "n/a"}, Effective APR ${report.effectiveApr != null ? report.effectiveApr.toFixed(2) + "%" : "n/a"}`
       ],
       recommended_action: "Auto popup workflow triggered. Encourage cooling-off, alternatives, and support resources.",
       consent_state: "granted",
@@ -223,13 +278,14 @@
       why_recommended: ["Automatic browser-side risk interception before application submit."],
       source: "browser",
       cost_snapshot: {
-        apr: Number(report.effectiveApr.toFixed(2)),
-        principal: report.contract,
-        months: report.periods,
-        estimated_monthly_payment: report.monthly,
-        estimated_total_repayment: Number((report.monthly * report.periods).toFixed(2)),
-        estimated_total_interest: Number((report.monthly * report.periods - report.disbursed).toFixed(2)),
-        overdue_one_month_extra: Number((report.monthly * 0.15).toFixed(2))
+        apr: report.effectiveApr != null ? Number(report.effectiveApr.toFixed(2)) : 0,
+        principal: report.contract ?? 0,
+        months: report.periods ?? 0,
+        estimated_monthly_payment: report.monthly ?? 0,
+        estimated_total_repayment: totalRepay != null ? Number(totalRepay.toFixed(2)) : 0,
+        estimated_total_interest: interest != null ? Number(interest.toFixed(2)) : 0,
+        overdue_one_month_extra:
+          report.monthly != null ? Number((report.monthly * 0.15).toFixed(2)) : 0
       },
       cooling_off: {
         loan_purpose: answers.loanPurpose,
@@ -281,17 +337,21 @@
 
     // 2) detailed risk items
     await new Promise((resolve) => {
+      const delta =
+        report.effectiveApr != null
+          ? (report.effectiveApr - (report.baseApr || 0)).toFixed(2) + "%"
+          : "N/A";
       showModal({
         title: "Detailed Risk Items",
         bodyHtml: `
           <ul style="margin:0 0 0 18px;">
-            <li>Contract amount: <strong>${report.contract}</strong></li>
-            <li>Upfront fee (pre-deducted): <strong>${report.upfrontFee}</strong></li>
-            <li>Actual disbursed principal: <strong>${report.disbursed}</strong></li>
-            <li>Monthly repayment: <strong>${report.monthly}</strong> × ${report.periods} periods</li>
+            <li>Contract amount: <strong>${fmtMoney(report.contract)}</strong></li>
+            <li>Upfront fee (pre-deducted): <strong>${fmtMoney(report.upfrontFee)}</strong></li>
+            <li>Actual disbursed principal: <strong>${fmtMoney(report.disbursed)}</strong></li>
+            <li>Monthly repayment: <strong>${fmtMoney(report.monthly)}</strong> × ${fmtMoney(report.periods)} periods</li>
             <li>Base APR: <strong>${report.baseApr != null ? report.baseApr.toFixed(2) + "%" : "N/A"}</strong></li>
-            <li>Effective APR (cashflow IRR): <strong>${report.effectiveApr.toFixed(2)}%</strong></li>
-            <li>Hidden-fee delta: <strong>${(report.effectiveApr - (report.baseApr || 0)).toFixed(2)}%</strong></li>
+            <li>Effective APR (cashflow IRR): <strong>${fmtAprPct(report.effectiveApr)}</strong></li>
+            <li>Hidden-fee delta: <strong>${delta}</strong></li>
             <li>Detected terms: <strong>${report.hitTerms.length ? report.hitTerms.join(", ") : "None"}</strong></li>
           </ul>
         `,
@@ -384,15 +444,20 @@
 
   function tryStart() {
     if (flowStarted) return;
+    if (sessionStorage.getItem(flowStorageKey()) === "1") return;
     const report = getReport();
     if (!report) return;
-    const key = `loanshield:auto:flow:${location.host}${location.pathname}:${report.contract}:${report.monthly}:${report.periods}:${report.upfrontFee}`;
-    if (sessionStorage.getItem(key) === "1") return;
     flowStarted = true;
-    sessionStorage.setItem(key, "1");
-    runFlow(report).catch(() => {
-      // keep host page stable
-    });
+    runFlow(report)
+      .then(() => {
+        sessionStorage.setItem(flowStorageKey(), "1");
+      })
+      .catch(() => {
+        // keep host page stable
+      })
+      .finally(() => {
+        flowStarted = false;
+      });
   }
 
   function onFormBehavior(e) {
@@ -402,7 +467,7 @@
     const isField = tag === "input" || tag === "textarea" || tag === "select";
     if (!isField) return;
     interactionCount += 1;
-    if (interactionCount >= 2) {
+    if (interactionCount >= 1) {
       tryStart();
     }
   }
