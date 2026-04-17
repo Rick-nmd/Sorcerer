@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>校园网贷话术模拟页（测试用）</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f3f4f6;
+        color: #111827;
+        padding: 24px;
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      h1, h2 {
+        margin-top: 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 12px;
+        background: #fee2e2;
+        color: #991b1b;
+        border-radius: 999px;
+        padding: 3px 10px;
+        margin-right: 8px;
+      }
+      .line {
+        margin: 8px 0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 190px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        font-family: Consolas, monospace;
+        box-sizing: border-box;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+      }
+      code {
+        background: #e5e7eb;
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>校园网贷话术模拟页（测试用）</h1>
+        <p>这个页面仅用于测试 LoanShield 插件识别能力，不是实际贷款产品。</p>
+        <p>建议测试流程：打开插件 -> 把下方文案复制到“页面文本” -> 点击“开始安全检测”。</p>
+      </div>
+
+      <div class="card">
+        <h2>模拟话术 A（高风险）</h2>
+        <span class="tag">秒批</span>
+        <span class="tag">学生专属</span>
+        <span class="tag">前置扣费</span>
+        <span class="tag">低息话术</span>
+        <div class="line">文案样本如下：</div>
+        <textarea id="sampleA" readonly>【校园轻松贷】学生专享，秒批秒放，无抵押不看征信！借款 12000 元，分 12 期，宣传月息 0.5%，每月固定还款 1100 元。放款时一次性收取 480 元账户服务费，无其他费用，随借随还，应急超方便。</textarea>
+        <div class="line">
+          <button type="button" onclick="copyText('sampleA')">复制样本 A</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>模拟话术 B（中风险）</h2>
+        <span class="tag">代扣审核费</span>
+        <span class="tag">应急导向</span>
+        <div class="line">文案样本如下：</div>
+        <textarea id="sampleB" readonly>校园备用金】学生专享低息借款，无抵押、审核快，应急超方便！借款 8000 元，分 12 期，每月固定还款 710 元。放款时一次性收取 120 元资料审核费，无其他额外费用，全程清晰透明。</textarea>
+        <div class="line">
+          <button type="button" onclick="copyText('sampleB')">复制样本 B</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>直接打开插件页面</h2>
+        <p>
+          插件网页版入口：<a href="./" target="_blank" rel="noopener noreferrer"><code>/student/</code></a>
+        </p>
+        <p>
+          学校端入口：<a href="../console/" target="_blank" rel="noopener noreferrer"><code>/console/</code></a>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      async function copyText(id) {
+        const el = document.getElementById(id);
+        try {
+          await navigator.clipboard.writeText(el.value);
+          alert("已复制到剪贴板");
+        } catch (_e) {
+          el.select();
+          document.execCommand("copy");
+          alert("已复制到剪贴板");
+        }
+      }
+    </script>
+  </body>
+</html>
