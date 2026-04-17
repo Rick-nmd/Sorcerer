@@ -3,15 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Support Companion</title>
+    <title>LoanShield:Cooling-Off & Support Companion</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="container">
       <header>
-        <h1 id="pageTitle">Cooling-Off & Support Companion</h1>
+        <h1 id="pageTitle">LoanShield<br />Cooling-Off & Support Companion</h1>
         <p id="pageSubtitle">
-          Private, explainable support before you decide — with a cooling-off pause and campus alternatives.
+          Before borrowing, take a pause:
+          local detection keeps it private, records stay transparent, plus cooling-off, campus alternatives, and support access.
         </p>
       </header>
 
@@ -42,6 +43,14 @@
       <section class="card">
         <h2 id="h2_scenario">Page check</h2>
         <div class="grid">
+          <label for="scenarioUrl" id="label_page_url">Page URL (optional)</label>
+          <input id="scenarioUrl" type="text" placeholder="https://example.com/loan-offer" />
+
+          <div class="scenario-fetch-row">
+            <button type="button" id="fetchFromUrlBtn">Fetch page text</button>
+            <button type="button" id="loadScenarioSampleBtn" class="btn-secondary">Load demo text</button>
+          </div>
+
           <label for="scenarioText" id="label_page_text">Page text</label>
           <textarea
             id="scenarioText"
@@ -197,9 +206,16 @@
         </div>
       </section>
 
-      <section class="card">
-        <h2 id="h2_history">My activity summary</h2>
-        <pre id="historyOutput">No student history loaded yet.</pre>
+      <section class="card history-section" id="historySection">
+        <div class="history-header">
+          <h2 id="h2_history">My activity summary</h2>
+          <button type="button" id="historyToggleBtn" class="history-toggle" aria-expanded="true" aria-controls="historyPanel">
+            Collapse
+          </button>
+        </div>
+        <div id="historyPanel" class="history-panel">
+          <pre id="historyOutput">No student history loaded yet.</pre>
+        </div>
       </section>
 
       <section class="card">

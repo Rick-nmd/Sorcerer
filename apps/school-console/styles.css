@@ -23,6 +23,114 @@ body {
   margin-bottom: 16px;
 }
 
+.audit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.audit-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.timeline-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.events-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.events-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.audit-toggle {
+  width: auto;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.audit-toggle:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.timeline-toggle {
+  width: auto;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.timeline-toggle:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.events-toggle {
+  width: auto;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.events-toggle:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.audit-section.audit-collapsed .audit-panel {
+  display: none;
+}
+
+.events-section.events-collapsed .events-panel {
+  display: none;
+}
+
+.timeline-section.timeline-collapsed .timeline-panel {
+  display: none;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -82,6 +190,10 @@ button {
   align-items: center;
   margin-top: 10px;
   font-size: 13px;
+}
+
+.timeline-controls {
+  max-width: 420px;
 }
 
 .inline-checkbox input {

@@ -4,10 +4,33 @@ const SESSION_STORAGE_KEY = "sorcerer_student_session_id";
 const CONSENT_PREFS_STORAGE_KEY = "sorcerer_consent_preferences";
 const LANGUAGE_STORAGE_KEY = "sorcerer_language";
 
-export const defaultApiBaseUrl = "http://localhost:8787";
+export const defaultApiBaseUrl = "http://127.0.0.1:8787";
+
+function isLocalHttpPage() {
+  if (typeof window === "undefined" || !window.location) {
+    return false;
+  }
+  const { protocol, hostname } = window.location;
+  return (protocol === "http:" || protocol === "https:") && (hostname === "localhost" || hostname === "127.0.0.1");
+}
 
 export function getApiBaseUrl() {
-  return localStorage.getItem(STORAGE_KEY) || defaultApiBaseUrl;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored !== null && stored !== "") {
+    // Migrate stale local default (hard-coded :8787) to same-origin proxy mode.
+    if (stored.trim() === defaultApiBaseUrl && isLocalHttpPage()) {
+      return "";
+    }
+    return stored;
+  }
+  // Student dev server proxies /api and /proxy to the real backend — empty base = same-origin.
+  if (typeof window !== "undefined" && window.location && window.location.protocol === "file:") {
+    return defaultApiBaseUrl;
+  }
+  if (isLocalHttpPage()) {
+    return "";
+  }
+  return defaultApiBaseUrl;
 }
 
 export function setApiBaseUrl(value) {

@@ -78,7 +78,8 @@ export async function fetchStudentHistory({ apiBaseUrl, sessionId, limit = 20, a
   );
 }
 
-export async function fetchSupportResources({ apiBaseUrl, apiKey = "" }) {
+export async function fetchSupportResources({ apiBaseUrl, apiKey = "", lang = "en" }) {
   const baseUrl = apiBaseUrl.replace(/\/$/, "");
-  return getJson(`${baseUrl}/api/support/resources`, apiKey);
+  const safeLang = lang === "zh" ? "zh" : "en";
+  return getJson(`${baseUrl}/api/support/resources?lang=${safeLang}`, apiKey);
 }

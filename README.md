@@ -43,6 +43,25 @@ Production roadmap: `docs/production-integration-roadmap.md`
 6. Run integrated smoke checks (in another terminal):
    - `npm run smoke:dev`
 
+## Web Deployment
+
+This project is deployable as a single web service (backend + both frontends served by backend):
+
+- Root entry: `/`
+- Student plugin: `/student`
+- School console: `/console`
+- Health check: `/health`
+
+### Render (recommended)
+
+`render.yaml` is included in the repository. After pushing to GitHub:
+
+1. Create a new Render Blueprint from this repo.
+2. Render will detect `render.yaml` and provision service `loanshield-demo`.
+3. After deployment, open:
+   - `https://<your-render-domain>/student`
+   - `https://<your-render-domain>/console`
+
 ## Scope
 
 See `docs/scope-mvp-plus.md` for MVP+ scope boundaries and done criteria.

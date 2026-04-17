@@ -5,7 +5,8 @@ const fs = require("fs");
 const crypto = require("crypto");
 
 const app = express();
-app.use(cors());
+// Reflect browser Origin (localhost:5173 vs 127.0.0.1:5173) so student dev UI can call API cross-origin reliably.
+app.use(cors({ origin: true, credentials: false }));
 app.use(express.json());
 
 const VALID_LEVELS = ["R1", "R2", "R3"];
@@ -272,37 +273,103 @@ function buildMockWorkStudyOptions() {
   ];
 }
 
-function buildSupportResources() {
+function buildSupportResources(lang = "en") {
+  if (lang === "zh") {
+    return {
+      education: [
+        {
+          resource_id: "edu_001",
+          title: "怎么识破网贷陷阱",
+          description:
+            '注意这些危险信号：话术催你"立即申请"、藏着的服务费、诱导你借新还旧、还有假的学生专享折扣。\n防坑三步：\n别急着点提交 — 冷静下来想想\n算清总共要还多少 — 别只看月供\n查查这公司靠不靠谱 — 有没有金融牌照',
+          steps: [
+            "别急着点提交 — 冷静下来想想",
+            "算清总共要还多少 — 别只看月供",
+            "查查这公司靠不靠谱 — 有没有金融牌照"
+          ],
+          url: "https://consumer.ftc.gov/"
+        },
+        {
+          resource_id: "edu_002",
+          title: "借钱前三问自测",
+          description: "是真急着用钱？能稳定还上吗？更低风险的渠道试过没？",
+          steps: ["真缺钱还是一时冲动？", "收入来源稳不稳定？", "校内无息借款试过没？"],
+          url: "https://www.consumerfinance.gov/"
+        }
+      ],
+      wellbeing: [
+        {
+          resource_id: "well_001",
+          title: "校园心理咨询与压力支持",
+          description: "经济压力容易让人冲动做决定。借钱前先找辅导员或信任的人聊聊。",
+          steps: ["联系学校心理咨询中心", "告诉导师或学长", "给自己一段冷静期"],
+          url: "https://findahelpline.com/"
+        },
+        {
+          resource_id: "well_002",
+          title: "危机干预与朋辈支持选项",
+          description:
+            "要是催债的让你慌了、收到威胁短信、或者压力大到睡不着——这不是你一个人能解决的事。\n现在就能做的三件事：\n打危机热线聊聊 — 24小时开着，不用真出事才能打\n找同龄人说说 — 学校心理社团、学长学姐，懂的人比你想象的多\n告诉学校老师 — 学工处、辅导员，他们处理过这种事，知道怎么帮你\n记住：被威胁了先保人，再谈钱",
+          steps: [
+            "打危机热线聊聊 — 24小时开着，不用真出事才能打",
+            "找同龄人说说 — 学校心理社团、学长学姐",
+            "告诉学校老师 — 学工处、辅导员，他们知道怎么帮你"
+          ],
+          url: "https://www.opencounseling.com/suicide-hotlines"
+        }
+      ]
+    };
+  }
+
   return {
     education: [
       {
         resource_id: "edu_001",
-        title: "How to spot predatory loan language",
-        description: "Review urgent-callout phrases, hidden fees, rollover pressure, and fake student discounts.",
-        steps: ["Pause before submit", "Compare total repayment", "Verify provider identity"],
+        title: "How to Spot Predatory Loan Traps",
+        description:
+          'Watch for danger signals: "apply now" pressure, hidden service fees, debt-rollover tactics, and fake student-only discounts.\nThree anti-trap steps:\nPause before submit\nCalculate total repayment, not only monthly payment\nVerify whether the provider is regulated',
+        steps: [
+          "Pause before submit and cool down",
+          "Calculate total repayment, not only the monthly amount",
+          "Check whether the provider has a valid finance license"
+        ],
         url: "https://consumer.ftc.gov/"
       },
       {
         resource_id: "edu_002",
-        title: "Three-question borrowing self-check",
-        description: "Check whether the need is urgent, repayment is stable, and lower-risk alternatives were tried first.",
-        steps: ["Need or impulse?", "Stable repayment source?", "Tried campus alternatives?"],
+        title: "Three Questions Before Borrowing",
+        description: "Is this an urgent need? Can I repay steadily? Have I tried safer alternatives first?",
+        steps: [
+          "Is this a real need or impulse spending?",
+          "Is my repayment source stable?",
+          "Have I tried campus low-risk support channels?"
+        ],
         url: "https://www.consumerfinance.gov/"
       }
     ],
     wellbeing: [
       {
         resource_id: "well_001",
-        title: "Campus counseling and stress support",
-        description: "Financial stress can escalate impulsive choices. Reach out to a counselor or trusted advisor before borrowing.",
-        steps: ["Contact counseling center", "Tell a mentor", "Take a cooldown period"],
+        title: "Campus Counseling and Stress Support",
+        description:
+          "Financial stress can drive rushed decisions. Before borrowing, talk with a counselor, mentor, or someone you trust.",
+        steps: [
+          "Contact campus counseling services",
+          "Talk with a mentor or advisor",
+          "Give yourself a short cooling-off window"
+        ],
         url: "https://findahelpline.com/"
       },
       {
         resource_id: "well_002",
-        title: "Crisis and peer-support options",
-        description: "Use crisis or peer support resources if loan pressure is tied to panic, threats, or emotional distress.",
-        steps: ["Call local crisis line", "Use peer support", "Escalate to school support team"],
+        title: "Crisis and Peer Support Options",
+        description:
+          "If collection pressure or threats are affecting your sleep and safety, do not handle it alone.\nWhat you can do now:\nCall a crisis helpline\nReach out to peer support groups\nInform student affairs or your advisor\nProtect yourself first, then handle finance issues.",
+        steps: [
+          "Call a 24/7 crisis support line",
+          "Reach out to peer counseling or trusted classmates",
+          "Contact student affairs or a campus advisor for help"
+        ],
         url: "https://www.opencounseling.com/suicide-hotlines"
       }
     ]
@@ -366,6 +433,34 @@ function createNetworkRiskEvent(signal) {
 }
 
 app.use("/console", express.static(path.resolve(__dirname, "../../../apps/school-console")));
+app.use("/student", express.static(path.resolve(__dirname, "../../../apps/student-plugin")));
+
+app.get("/", (_req, res) => {
+  res.type("html").send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LoanShield Demo</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; color: #111827; background: #f3f4f6; }
+      .card { max-width: 760px; background: #fff; border: 1px solid #d1d5db; border-radius: 10px; padding: 20px; }
+      h1 { margin-top: 0; }
+      a { display: inline-block; margin-right: 14px; margin-top: 10px; }
+      code { background: #f3f4f6; padding: 2px 6px; border-radius: 5px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>LoanShield Deploy Entry</h1>
+      <p>Use the links below to open each app:</p>
+      <a href="/student">Student Plugin</a>
+      <a href="/console">School Console</a>
+      <p>Health check: <code>/health</code></p>
+    </div>
+  </body>
+</html>`);
+});
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "school-backend" });
@@ -510,8 +605,30 @@ app.get("/api/channels/finance", async (_req, res) => {
   }
 });
 
-app.get("/api/support/resources", (_req, res) => {
-  return res.json(buildEnvelope(true, "OK", buildSupportResources()));
+app.get("/api/support/resources", (req, res) => {
+  const lang = String(req.query.lang || "en").trim().toLowerCase() === "zh" ? "zh" : "en";
+  return res.json(buildEnvelope(true, "OK", buildSupportResources(lang)));
+});
+
+app.get("/proxy/fetch", async (req, res) => {
+  const url = String(req.query.url || "").trim();
+  if (!url) {
+    return res.status(400).json(buildEnvelope(false, "Missing url", null, "INVALID_QUERY"));
+  }
+  try {
+    const response = await fetch(url, { method: "GET" });
+    if (!response.ok) {
+      return res
+        .status(502)
+        .json(buildEnvelope(false, `Upstream status ${response.status}`, null, "UPSTREAM_UNAVAILABLE"));
+    }
+    const html = await response.text();
+    const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
+    const text = withoutScripts.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    return res.json(buildEnvelope(true, "OK", { text: text.slice(0, 20000) }));
+  } catch (error) {
+    return res.status(500).json(buildEnvelope(false, error.message, null, "FETCH_FAILED"));
+  }
 });
 
 app.post("/api/consent-events", (req, res) => {

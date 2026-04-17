@@ -28,6 +28,10 @@ h2 {
   margin-top: 0;
 }
 
+#pageSubtitle {
+  white-space: pre-line;
+}
+
 label {
   font-size: 14px;
   font-weight: 600;
@@ -73,6 +77,72 @@ button:hover {
 
 .hidden {
   display: none;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.history-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.history-toggle {
+  width: auto;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.history-toggle:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.history-section.history-collapsed .history-panel {
+  display: none;
+}
+
+.scenario-fetch-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.scenario-fetch-row button {
+  width: auto;
+  max-width: 280px;
+  margin-bottom: 0;
+  background: #64748b;
+}
+
+.scenario-fetch-row button:hover {
+  background: #475569;
+}
+
+.scenario-fetch-row .btn-secondary {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.scenario-fetch-row .btn-secondary:hover {
+  background: #cbd5e1;
+  color: #1e293b;
 }
 
 .muted {

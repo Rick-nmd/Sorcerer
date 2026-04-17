@@ -19,7 +19,8 @@ function probePort(port) {
     const server = net.createServer();
     server.unref();
     server.on("error", () => resolve(false));
-    server.listen({ port, host: "127.0.0.1" }, () => {
+    // Don't pin host to 127.0.0.1; otherwise Windows can miss listeners bound on :: / 0.0.0.0.
+    server.listen({ port }, () => {
       server.close(() => resolve(true));
     });
   });
@@ -52,7 +53,10 @@ async function main() {
   console.log(`[demo] student plugin: http://localhost:${pluginPort}`);
 
   runNode("services/school-backend/src/server.js", { PORT: backendPort });
-  runNode("apps/student-plugin/dev-server.js", { A_PLUGIN_PORT: pluginPort });
+  runNode("apps/student-plugin/dev-server.js", {
+    A_PLUGIN_PORT: pluginPort,
+    BACKEND_PROXY_TARGET: `http://127.0.0.1:${backendPort}`
+  });
 }
 
 main().catch((error) => {

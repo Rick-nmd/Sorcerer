@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Campus Support Console</title>
+    <title>LoanShield:Campus Support Console</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="container">
-      <h1 id="pageTitle">Campus Support Console</h1>
+      <h1 id="pageTitle">LoanShield<br />Campus Support Console</h1>
       <div class="card">
         <strong id="tipLabel">Tip:</strong>
         <span id="tipText"
@@ -106,25 +106,32 @@
         </div>
       </section>
 
-      <section class="card">
-        <h2 id="h2_events">Support events</h2>
-        <div id="meta">No support events loaded yet.</div>
-        <table>
-          <thead>
-            <tr>
-              <th id="th_event_id">Event ID</th>
-              <th id="th_timestamp">Timestamp</th>
-              <th id="th_session">Session</th>
-              <th id="th_risk">Risk tier</th>
-              <th id="th_channel">Channel</th>
-              <th id="th_source">Source</th>
-              <th id="th_consent">Consent</th>
-              <th id="th_why_flagged">Why flagged</th>
-              <th id="th_why_recommended">Why recommended</th>
-            </tr>
-          </thead>
-          <tbody id="eventsBody"></tbody>
-        </table>
+      <section class="card events-section" id="eventsSection">
+        <div class="events-header">
+          <h2 id="h2_events">Support events</h2>
+          <button type="button" id="eventsToggleBtn" class="events-toggle" aria-expanded="true" aria-controls="eventsPanel">
+            Collapse
+          </button>
+        </div>
+        <div id="eventsPanel" class="events-panel">
+          <div id="meta">No support events loaded yet.</div>
+          <table>
+            <thead>
+              <tr>
+                <th id="th_event_id">Event ID</th>
+                <th id="th_timestamp">Timestamp</th>
+                <th id="th_session">Session</th>
+                <th id="th_risk">Risk tier</th>
+                <th id="th_channel">Channel</th>
+                <th id="th_source">Source</th>
+                <th id="th_consent">Consent</th>
+                <th id="th_why_flagged">Why flagged</th>
+                <th id="th_why_recommended">Why recommended</th>
+              </tr>
+            </thead>
+            <tbody id="eventsBody"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="card">
@@ -164,13 +171,24 @@
         </table>
       </section>
 
-      <section class="card">
-        <h2 id="h2_timeline">Student timeline</h2>
-        <div class="actions">
-          <button id="loadStudentHistoryBtn">Load student timeline</button>
+      <section class="card timeline-section" id="timelineSection">
+        <div class="timeline-header">
+          <h2 id="h2_timeline">Student timeline</h2>
+          <button type="button" id="timelineToggleBtn" class="timeline-toggle" aria-expanded="true" aria-controls="timelinePanel">
+            Collapse
+          </button>
         </div>
-        <div id="studentHistoryMeta">Paste a student session ID from the student UI, then load the timeline.</div>
-        <pre id="studentHistoryOutput">No student timeline loaded yet.</pre>
+        <div id="timelinePanel" class="timeline-panel">
+          <div class="timeline-controls">
+            <label for="timelineSessionId" id="label_timeline_session">Student session ID</label>
+            <input id="timelineSessionId" type="text" placeholder="student_..." />
+          </div>
+          <div class="actions">
+            <button id="loadStudentHistoryBtn">Load student timeline</button>
+          </div>
+          <div id="studentHistoryMeta">Paste a student session ID from the student UI, then load the timeline.</div>
+          <pre id="studentHistoryOutput">No student timeline loaded yet.</pre>
+        </div>
       </section>
 
       <section class="card">
@@ -206,22 +224,29 @@
         </table>
       </section>
 
-      <section class="card">
-        <h2 id="h2_audit">Governance audit chain</h2>
-        <div id="auditMeta">No audit events loaded yet.</div>
-        <table>
-          <thead>
-            <tr>
-              <th id="th_audit_id">Audit ID</th>
-              <th id="th_audit_ts">Timestamp</th>
-              <th id="th_audit_actor">Actor</th>
-              <th id="th_audit_action">Action</th>
-              <th id="th_audit_resource">Resource</th>
-              <th id="th_audit_chain">Hash Chain</th>
-            </tr>
-          </thead>
-          <tbody id="auditBody"></tbody>
-        </table>
+      <section class="card audit-section" id="auditSection">
+        <div class="audit-header">
+          <h2 id="h2_audit">Governance audit chain</h2>
+          <button type="button" id="auditToggleBtn" class="audit-toggle" aria-expanded="true" aria-controls="auditPanel">
+            Collapse
+          </button>
+        </div>
+        <div id="auditPanel" class="audit-panel">
+          <div id="auditMeta">No audit events loaded yet.</div>
+          <table>
+            <thead>
+              <tr>
+                <th id="th_audit_id">Audit ID</th>
+                <th id="th_audit_ts">Timestamp</th>
+                <th id="th_audit_actor">Actor</th>
+                <th id="th_audit_action">Action</th>
+                <th id="th_audit_resource">Resource</th>
+                <th id="th_audit_chain">Hash Chain</th>
+              </tr>
+            </thead>
+            <tbody id="auditBody"></tbody>
+          </table>
+        </div>
       </section>
     </main>
 

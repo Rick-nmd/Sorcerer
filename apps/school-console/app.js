@@ -1,6 +1,9 @@
 const STORAGE_KEY = "school_console_api_base_url";
 const API_KEY_STORAGE_KEY = "school_console_api_key";
 const LANGUAGE_STORAGE_KEY = "school_console_language";
+const AUDIT_COLLAPSED_KEY = "school_console_audit_collapsed";
+const EVENTS_COLLAPSED_KEY = "school_console_events_collapsed";
+const TIMELINE_COLLAPSED_KEY = "school_console_timeline_collapsed";
 
 const ui = {
   languageSelect: document.getElementById("languageSelect"),
@@ -15,6 +18,7 @@ const ui = {
   label_channel: document.getElementById("label_channel"),
   label_source: document.getElementById("label_source"),
   label_session: document.getElementById("label_session"),
+  label_timeline_session: document.getElementById("label_timeline_session"),
   label_from: document.getElementById("label_from"),
   label_to: document.getElementById("label_to"),
   label_auto_refresh: document.getElementById("label_auto_refresh"),
@@ -24,6 +28,9 @@ const ui = {
   summary_channel_label: document.getElementById("summary_channel_label"),
   summary_consent_label: document.getElementById("summary_consent_label"),
   summary_source_label: document.getElementById("summary_source_label"),
+  eventsSection: document.getElementById("eventsSection"),
+  eventsToggleBtn: document.getElementById("eventsToggleBtn"),
+  eventsPanel: document.getElementById("eventsPanel"),
   h2_events: document.getElementById("h2_events"),
   th_event_id: document.getElementById("th_event_id"),
   th_timestamp: document.getElementById("th_timestamp"),
@@ -73,6 +80,7 @@ const ui = {
   channelType: document.getElementById("channelType"),
   sourceFilter: document.getElementById("sourceFilter"),
   studentSessionId: document.getElementById("studentSessionId"),
+  timelineSessionId: document.getElementById("timelineSessionId"),
   fromDate: document.getElementById("fromDate"),
   toDate: document.getElementById("toDate"),
   refreshBtn: document.getElementById("refreshBtn"),
@@ -94,13 +102,19 @@ const ui = {
   consentProfilesBody: document.getElementById("consentProfilesBody"),
   studentHistoryMeta: document.getElementById("studentHistoryMeta"),
   studentHistoryOutput: document.getElementById("studentHistoryOutput"),
+  timelineSection: document.getElementById("timelineSection"),
+  timelineToggleBtn: document.getElementById("timelineToggleBtn"),
+  timelinePanel: document.getElementById("timelinePanel"),
   supportMeta: document.getElementById("supportMeta"),
   educationResources: document.getElementById("educationResources"),
   wellbeingResources: document.getElementById("wellbeingResources"),
   networkMeta: document.getElementById("networkMeta"),
   networkBody: document.getElementById("networkBody"),
   auditMeta: document.getElementById("auditMeta"),
-  auditBody: document.getElementById("auditBody")
+  auditBody: document.getElementById("auditBody"),
+  auditSection: document.getElementById("auditSection"),
+  auditToggleBtn: document.getElementById("auditToggleBtn"),
+  auditPanel: document.getElementById("auditPanel")
 };
 let autoRefreshTimer = null;
 
@@ -117,7 +131,9 @@ let currentLang = getLanguage();
 
 const I18N = {
   en: {
-    title: "Campus Support Console",
+    title: "LoanShield:Campus Support Console",
+    title_brand: "LoanShield",
+    title_main: "Campus Support Console",
     tip_label: "Tip:",
     tip_text:
       "use the backend port printed in your terminal (for example from npm run demo). Example: http://localhost:8788/console (the port may differ from 8787).",
@@ -154,24 +170,70 @@ const I18N = {
     th_why_flagged: "Why flagged",
     th_why_recommended: "Why recommended",
     h2_consent_log: "Consent change log",
+    th_consent_id: "Consent record ID",
+    th_consent_ts: "Timestamp",
+    th_consent_session: "Session",
+    th_consent_actor: "Who",
+    th_consent_state: "State",
+    th_consent_scopes: "Scopes",
+    th_consent_note: "Note",
     h2_consent_snapshot: "Consent snapshot",
+    th_profile_session: "Session",
+    th_profile_state: "State",
+    th_profile_scopes: "Scopes",
+    th_profile_updated_at: "Updated At",
+    th_profile_updated_by: "Updated By",
+    th_profile_reason: "Reason",
     h2_timeline: "Student timeline",
     btn_load_timeline: "Load student timeline",
     h2_support: "Student support content",
     h3_education: "Education",
     h3_wellbeing: "Wellbeing",
     h2_network: "Network safety signals",
+    th_sig_id: "Signal ID",
+    th_sig_session: "Session",
+    th_sig_observed: "Observed At",
+    th_sig_category: "Category",
+    th_sig_l7: "L7 Signal",
+    th_sig_conf: "Confidence",
     h2_audit: "Governance audit chain",
+    th_audit_id: "Audit ID",
+    th_audit_ts: "Timestamp",
+    th_audit_actor: "Actor",
+    th_audit_action: "Action",
+    th_audit_resource: "Resource",
+    th_audit_chain: "Hash Chain",
     consent_meta_empty: "No consent events loaded yet.",
     consent_profiles_meta_empty: "No consent profiles loaded yet.",
     support_meta_empty: "No support resources loaded yet.",
     network_meta_empty: "No network signals loaded yet.",
     audit_meta_empty: "No audit events loaded yet.",
-    timeline_meta_hint: "Paste a student session ID from the student UI, then load the timeline.",
-    timeline_empty: "No student timeline loaded yet."
+    timeline_meta_hint: "Paste a student session ID in the input above, then load the timeline.",
+    timeline_empty: "No student timeline loaded yet.",
+    meta_loaded_items: "Loaded {loaded} / total {total} item(s).",
+    meta_loaded_consent_events: "Loaded {loaded} / total {total} consent event(s).",
+    meta_loaded_consent_profiles: "Loaded {loaded} / total {total} consent profile(s).",
+    meta_loaded_network_signals: "Loaded {loaded} / total {total} network signal(s).",
+    meta_loaded_audit_events: "Loaded {loaded} / total {total} audit event(s).",
+    support_meta_counts: "Education {education}, wellbeing {wellbeing} resource(s).",
+    empty_events_found: "No events found.",
+    empty_consent_events_found: "No consent events found.",
+    empty_consent_profiles_found: "No consent profiles found.",
+    empty_network_signals_found: "No network signals found.",
+    empty_audit_events_found: "No audit events found.",
+    empty_education_resources: "No education resources found.",
+    empty_wellbeing_resources: "No wellbeing resources found.",
+    audit_toggle_collapse: "Collapse",
+    audit_toggle_expand: "Expand",
+    events_toggle_collapse: "Collapse",
+    events_toggle_expand: "Expand",
+    timeline_toggle_collapse: "Collapse",
+    timeline_toggle_expand: "Expand"
   },
   zh: {
-    title: "校园支持控制台",
+    title: "贷盾：学校支持平台",
+    title_brand: "贷盾",
+    title_main: "学校支持平台",
     tip_label: "提示：",
     tip_text:
       "请使用终端输出的后端端口（例如通过 npm run demo 启动）。示例：http://localhost:8788/console（端口不一定是 8787）。",
@@ -208,21 +270,82 @@ const I18N = {
     th_why_flagged: "触发原因",
     th_why_recommended: "推荐理由",
     h2_consent_log: "同意变更记录",
+    th_consent_id: "同意记录 ID",
+    th_consent_ts: "时间",
+    th_consent_session: "会话",
+    th_consent_actor: "操作方",
+    th_consent_state: "状态",
+    th_consent_scopes: "范围",
+    th_consent_note: "备注",
     h2_consent_snapshot: "同意画像（最新）",
+    th_profile_session: "会话",
+    th_profile_state: "状态",
+    th_profile_scopes: "范围",
+    th_profile_updated_at: "更新时间",
+    th_profile_updated_by: "更新人",
+    th_profile_reason: "原因",
     h2_timeline: "学生时间线",
     btn_load_timeline: "加载学生时间线",
     h2_support: "学生支持内容",
     h3_education: "安全教育",
     h3_wellbeing: "心理支持",
     h2_network: "网络安全信号",
+    th_sig_id: "信号 ID",
+    th_sig_session: "会话",
+    th_sig_observed: "观测时间",
+    th_sig_category: "类别",
+    th_sig_l7: "L7 信号",
+    th_sig_conf: "置信度",
     h2_audit: "治理审计链",
-    consent_meta_empty: "尚未加载同意记录。",
-    consent_profiles_meta_empty: "尚未加载同意画像。",
+    th_audit_id: "审计 ID",
+    th_audit_ts: "时间",
+    th_audit_actor: "操作方",
+    th_audit_action: "动作",
+    th_audit_resource: "资源",
+    th_audit_chain: "哈希链",
+    consent_meta_empty: "尚未加载同意变更记录。",
+    consent_profiles_meta_empty: "尚未加载最新同意画像。",
     support_meta_empty: "尚未加载支持内容。",
     network_meta_empty: "尚未加载网络信号。",
     audit_meta_empty: "尚未加载审计事件。",
-    timeline_meta_hint: "从学生端复制会话 ID，粘贴后加载时间线。",
-    timeline_empty: "尚未加载学生时间线。"
+    timeline_meta_hint: "从学生端复制会话 ID，粘贴到上方输入框后加载时间线。",
+    timeline_empty: "尚未加载学生时间线。",
+    opt_all: "全部",
+    channel_work: "勤工俭学",
+    channel_finance: "正规金融",
+    channel_mixed: "混合",
+    source_browser: "浏览器",
+    source_network: "网络",
+    source_integration: "机构对接",
+    source_demo: "演示",
+    consent_granted: "已授权",
+    consent_revoked: "已撤销",
+    consent_not_granted: "未授权",
+    err_seed_failed_prefix: "加载演示数据失败：",
+    err_clear_failed_prefix: "清空演示数据失败：",
+    err_timeline_failed_prefix: "学生时间线加载失败：",
+    meta_loaded_items: "已加载 {loaded} / 共 {total} 条。",
+    meta_loaded_consent_events: "已加载 {loaded} / 共 {total} 条同意变更记录。",
+    meta_loaded_consent_profiles: "已加载 {loaded} / 共 {total} 条同意画像。",
+    meta_loaded_network_signals: "已加载 {loaded} / 共 {total} 条网络安全信号。",
+    meta_loaded_audit_events: "已加载 {loaded} / 共 {total} 条审计事件。",
+    support_meta_counts: "安全教育 {education} 条，心理支持 {wellbeing} 条。",
+    empty_events_found: "未找到事件。",
+    empty_consent_events_found: "未找到同意变更记录。",
+    empty_consent_profiles_found: "未找到同意画像。",
+    empty_network_signals_found: "未找到网络安全信号。",
+    empty_audit_events_found: "未找到审计事件。",
+    empty_education_resources: "暂无安全教育内容。",
+    empty_wellbeing_resources: "暂无心理支持内容。",
+    scope_label_telemetry: "浏览侧摘要信号",
+    scope_label_school_support: "学校支持跟进",
+    scope_label_partner_offers: "合作方正规金融信息",
+    audit_toggle_collapse: "收起",
+    audit_toggle_expand: "展开",
+    events_toggle_collapse: "收起",
+    events_toggle_expand: "展开",
+    timeline_toggle_collapse: "收起",
+    timeline_toggle_expand: "展开"
   }
 };
 
@@ -230,10 +353,164 @@ function t(key) {
   return I18N[currentLang]?.[key] || I18N.en[key] || key;
 }
 
+function formatTemplate(key, values) {
+  const raw = t(key);
+  return Object.entries(values).reduce((acc, [k, v]) => acc.replaceAll(`{${k}}`, String(v)), raw);
+}
+
+function setSelectOptions(selectEl, options) {
+  const previous = selectEl.value;
+  selectEl.innerHTML = "";
+  for (const option of options) {
+    const el = document.createElement("option");
+    el.value = option.value;
+    el.textContent = option.label;
+    selectEl.appendChild(el);
+  }
+  const stillExists = Array.from(selectEl.options).some((opt) => opt.value === previous);
+  selectEl.value = stillExists ? previous : options[0]?.value || "";
+}
+
+function refreshFilterSelectLabels() {
+  setSelectOptions(ui.riskLevel, [
+    { value: "", label: currentLang === "zh" ? t("opt_all") : "All" },
+    { value: "R1", label: "R1" },
+    { value: "R2", label: "R2" },
+    { value: "R3", label: "R3" }
+  ]);
+
+  setSelectOptions(ui.channelType, [
+    { value: "", label: currentLang === "zh" ? t("opt_all") : "All" },
+    { value: "work", label: currentLang === "zh" ? t("channel_work") : "work" },
+    { value: "finance", label: currentLang === "zh" ? t("channel_finance") : "finance" },
+    { value: "mixed", label: currentLang === "zh" ? t("channel_mixed") : "mixed" }
+  ]);
+
+  setSelectOptions(ui.sourceFilter, [
+    { value: "", label: currentLang === "zh" ? t("opt_all") : "All" },
+    { value: "browser", label: currentLang === "zh" ? t("source_browser") : "browser" },
+    { value: "network", label: currentLang === "zh" ? t("source_network") : "network" },
+    { value: "integration", label: currentLang === "zh" ? t("source_integration") : "integration" },
+    { value: "demo", label: currentLang === "zh" ? t("source_demo") : "demo" }
+  ]);
+}
+
+function displayChannel(value) {
+  if (currentLang !== "zh") return value || "-";
+  if (value === "work") return t("channel_work");
+  if (value === "finance") return t("channel_finance");
+  if (value === "mixed") return t("channel_mixed");
+  return value || "-";
+}
+
+function displaySource(value) {
+  if (currentLang !== "zh") return value || "-";
+  if (value === "browser") return t("source_browser");
+  if (value === "network") return t("source_network");
+  if (value === "integration") return t("source_integration");
+  if (value === "demo") return t("source_demo");
+  return value || "-";
+}
+
+function displayConsent(value) {
+  if (currentLang !== "zh") return value || "-";
+  if (value === "granted") return t("consent_granted");
+  if (value === "revoked") return t("consent_revoked");
+  if (value === "not_granted") return t("consent_not_granted");
+  return value || "-";
+}
+
+function isEmptyCopy(text) {
+  return (
+    text === I18N.en.meta_empty ||
+    text === I18N.zh.meta_empty ||
+    text === I18N.en.consent_meta_empty ||
+    text === I18N.zh.consent_meta_empty ||
+    text === I18N.en.consent_profiles_meta_empty ||
+    text === I18N.zh.consent_profiles_meta_empty ||
+    text === I18N.en.support_meta_empty ||
+    text === I18N.zh.support_meta_empty ||
+    text === I18N.en.network_meta_empty ||
+    text === I18N.zh.network_meta_empty ||
+    text === I18N.en.audit_meta_empty ||
+    text === I18N.zh.audit_meta_empty ||
+    text === I18N.en.timeline_meta_hint ||
+    text === I18N.zh.timeline_meta_hint ||
+    text === I18N.en.timeline_empty ||
+    text === I18N.zh.timeline_empty
+  );
+}
+
+function isAuditCollapsed() {
+  return Boolean(ui.auditSection?.classList.contains("audit-collapsed"));
+}
+
+function syncAuditToggleLabel() {
+  if (!ui.auditToggleBtn) return;
+  const collapsed = isAuditCollapsed();
+  ui.auditToggleBtn.textContent = collapsed ? t("audit_toggle_expand") : t("audit_toggle_collapse");
+  ui.auditToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+}
+
+function setAuditCollapsed(collapsed) {
+  if (!ui.auditSection) return;
+  ui.auditSection.classList.toggle("audit-collapsed", collapsed);
+  try {
+    localStorage.setItem(AUDIT_COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch (_e) {
+    // ignore
+  }
+  syncAuditToggleLabel();
+}
+
+function isEventsCollapsed() {
+  return Boolean(ui.eventsSection?.classList.contains("events-collapsed"));
+}
+
+function syncEventsToggleLabel() {
+  if (!ui.eventsToggleBtn) return;
+  const collapsed = isEventsCollapsed();
+  ui.eventsToggleBtn.textContent = collapsed ? t("events_toggle_expand") : t("events_toggle_collapse");
+  ui.eventsToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+}
+
+function setEventsCollapsed(collapsed) {
+  if (!ui.eventsSection) return;
+  ui.eventsSection.classList.toggle("events-collapsed", collapsed);
+  try {
+    localStorage.setItem(EVENTS_COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch (_e) {
+    // ignore
+  }
+  syncEventsToggleLabel();
+}
+
+function isTimelineCollapsed() {
+  return Boolean(ui.timelineSection?.classList.contains("timeline-collapsed"));
+}
+
+function syncTimelineToggleLabel() {
+  if (!ui.timelineToggleBtn) return;
+  const collapsed = isTimelineCollapsed();
+  ui.timelineToggleBtn.textContent = collapsed ? t("timeline_toggle_expand") : t("timeline_toggle_collapse");
+  ui.timelineToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+}
+
+function setTimelineCollapsed(collapsed) {
+  if (!ui.timelineSection) return;
+  ui.timelineSection.classList.toggle("timeline-collapsed", collapsed);
+  try {
+    localStorage.setItem(TIMELINE_COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch (_e) {
+    // ignore
+  }
+  syncTimelineToggleLabel();
+}
+
 function applyLanguage() {
   document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
   document.title = t("title");
-  if (ui.pageTitle) ui.pageTitle.textContent = t("title");
+  if (ui.pageTitle) ui.pageTitle.innerHTML = `${t("title_brand")}<br>${t("title_main")}`;
   if (ui.tipLabel) ui.tipLabel.textContent = t("tip_label");
   if (ui.tipText) ui.tipText.textContent = t("tip_text");
 
@@ -245,6 +522,7 @@ function applyLanguage() {
   ui.label_channel.textContent = t("label_channel");
   ui.label_source.textContent = t("label_source");
   ui.label_session.textContent = t("label_session");
+  if (ui.label_timeline_session) ui.label_timeline_session.textContent = t("label_session");
   ui.label_from.textContent = t("label_from");
   ui.label_to.textContent = t("label_to");
 
@@ -272,31 +550,77 @@ function applyLanguage() {
   ui.th_why_flagged.textContent = t("th_why_flagged");
   ui.th_why_recommended.textContent = t("th_why_recommended");
 
+  refreshFilterSelectLabels();
+
   ui.h2_consent_log.textContent = t("h2_consent_log");
+  ui.th_consent_id.textContent = t("th_consent_id");
+  ui.th_consent_ts.textContent = t("th_consent_ts");
+  ui.th_consent_session.textContent = t("th_consent_session");
+  ui.th_consent_actor.textContent = t("th_consent_actor");
+  ui.th_consent_state.textContent = t("th_consent_state");
+  ui.th_consent_scopes.textContent = t("th_consent_scopes");
+  ui.th_consent_note.textContent = t("th_consent_note");
   ui.h2_consent_snapshot.textContent = t("h2_consent_snapshot");
+  ui.th_profile_session.textContent = t("th_profile_session");
+  ui.th_profile_state.textContent = t("th_profile_state");
+  ui.th_profile_scopes.textContent = t("th_profile_scopes");
+  ui.th_profile_updated_at.textContent = t("th_profile_updated_at");
+  ui.th_profile_updated_by.textContent = t("th_profile_updated_by");
+  ui.th_profile_reason.textContent = t("th_profile_reason");
   ui.h2_timeline.textContent = t("h2_timeline");
   ui.loadStudentHistoryBtn.textContent = t("btn_load_timeline");
   ui.h2_support.textContent = t("h2_support");
   ui.h3_education.textContent = t("h3_education");
   ui.h3_wellbeing.textContent = t("h3_wellbeing");
   ui.h2_network.textContent = t("h2_network");
+  ui.th_sig_id.textContent = t("th_sig_id");
+  ui.th_sig_session.textContent = t("th_sig_session");
+  ui.th_sig_observed.textContent = t("th_sig_observed");
+  ui.th_sig_category.textContent = t("th_sig_category");
+  ui.th_sig_l7.textContent = t("th_sig_l7");
+  ui.th_sig_conf.textContent = t("th_sig_conf");
   ui.h2_audit.textContent = t("h2_audit");
+  ui.th_audit_id.textContent = t("th_audit_id");
+  ui.th_audit_ts.textContent = t("th_audit_ts");
+  ui.th_audit_actor.textContent = t("th_audit_actor");
+  ui.th_audit_action.textContent = t("th_audit_action");
+  ui.th_audit_resource.textContent = t("th_audit_resource");
+  ui.th_audit_chain.textContent = t("th_audit_chain");
 
-  if (ui.meta.textContent.includes("No ")) ui.meta.textContent = t("meta_empty");
-  if (ui.consentMeta.textContent.includes("No ")) ui.consentMeta.textContent = t("consent_meta_empty");
-  if (ui.consentProfileMeta.textContent.includes("No "))
-    ui.consentProfileMeta.textContent = t("consent_profiles_meta_empty");
-  if (ui.supportMeta.textContent.includes("No ")) ui.supportMeta.textContent = t("support_meta_empty");
-  if (ui.networkMeta.textContent.includes("No ")) ui.networkMeta.textContent = t("network_meta_empty");
-  if (ui.auditMeta.textContent.includes("No ")) ui.auditMeta.textContent = t("audit_meta_empty");
-  if (ui.studentHistoryMeta.textContent.includes("Paste") || ui.studentHistoryMeta.textContent.includes("Enter")) {
-    ui.studentHistoryMeta.textContent = t("timeline_meta_hint");
-  }
-  if (ui.studentHistoryOutput.textContent.includes("No student")) ui.studentHistoryOutput.textContent = t("timeline_empty");
+  if (isEmptyCopy(ui.meta.textContent)) ui.meta.textContent = t("meta_empty");
+  if (isEmptyCopy(ui.consentMeta.textContent)) ui.consentMeta.textContent = t("consent_meta_empty");
+  if (isEmptyCopy(ui.consentProfileMeta.textContent)) ui.consentProfileMeta.textContent = t("consent_profiles_meta_empty");
+  if (isEmptyCopy(ui.supportMeta.textContent)) ui.supportMeta.textContent = t("support_meta_empty");
+  if (isEmptyCopy(ui.networkMeta.textContent)) ui.networkMeta.textContent = t("network_meta_empty");
+  if (isEmptyCopy(ui.auditMeta.textContent)) ui.auditMeta.textContent = t("audit_meta_empty");
+  if (isEmptyCopy(ui.studentHistoryMeta.textContent)) ui.studentHistoryMeta.textContent = t("timeline_meta_hint");
+  if (isEmptyCopy(ui.studentHistoryOutput.textContent)) ui.studentHistoryOutput.textContent = t("timeline_empty");
+  syncAuditToggleLabel();
+  syncEventsToggleLabel();
+  syncTimelineToggleLabel();
 }
 
 function getApiBaseUrl() {
-  return localStorage.getItem(STORAGE_KEY) || "http://localhost:8787";
+  const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
+  const fallback = "http://localhost:8787";
+
+  if (typeof window !== "undefined" && window.location) {
+    const { protocol, origin, pathname, hostname } = window.location;
+    const isHttpPage = protocol === "http:" || protocol === "https:";
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+    const onConsolePath = pathname.startsWith("/console");
+
+    // If opened from backend /console, same-origin is the safest default.
+    if (isHttpPage && onConsolePath) {
+      const staleLocalDefaults = new Set(["http://localhost:8787", "http://127.0.0.1:8787"]);
+      const isStoredLocal = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(stored);
+      if (!stored || (isLocalHost && isStoredLocal && stored !== origin) || (isLocalHost && staleLocalDefaults.has(stored))) {
+        return origin;
+      }
+    }
+  }
+
+  return stored || fallback;
 }
 
 function setApiBaseUrl(value) {
@@ -340,7 +664,7 @@ function buildQueryString() {
 
 function renderRows(items) {
   if (!items.length) {
-    ui.eventsBody.innerHTML = `<tr><td colspan="9">No events found.</td></tr>`;
+    ui.eventsBody.innerHTML = `<tr><td colspan="9">${t("empty_events_found")}</td></tr>`;
     return;
   }
 
@@ -352,9 +676,9 @@ function renderRows(items) {
         <td>${item.timestamp || "-"}</td>
         <td>${item.session_id || "-"}</td>
         <td>${item.risk_level || "-"}</td>
-        <td>${item.channel_type || "-"}</td>
-        <td>${item.source || "-"}</td>
-        <td>${item.consent_state || "-"}</td>
+        <td>${displayChannel(item.channel_type)}</td>
+        <td>${displaySource(item.source)}</td>
+        <td>${displayConsent(item.consent_state)}</td>
         <td>${(item.why_flagged || []).join("<br/>") || "-"}</td>
         <td>${(item.why_recommended || []).join("<br/>") || "-"}</td>
       </tr>
@@ -370,6 +694,20 @@ function renderSummary(summary) {
 
   ui.totalEvents.textContent = String(summary.total_events ?? 0);
   ui.riskSummary.textContent = `R1:${summary.by_risk_level?.R1 ?? 0} | R2:${summary.by_risk_level?.R2 ?? 0} | R3:${summary.by_risk_level?.R3 ?? 0}`;
+  if (currentLang === "zh") {
+    ui.channelSummary.textContent = `${t("channel_work")}:${summary.by_channel_type?.work ?? 0} | ${t("channel_finance")}:${
+      summary.by_channel_type?.finance ?? 0
+    } | ${t("channel_mixed")}:${summary.by_channel_type?.mixed ?? 0}`;
+    ui.consentSummary.textContent = `${t("consent_granted")}:${summary.consent?.granted ?? 0} | ${t("consent_revoked")}:${
+      summary.consent?.revoked ?? 0
+    } | ${t("consent_not_granted")}:${summary.consent?.not_granted ?? 0}`;
+    ui.sourceSummary.textContent = `${t("source_browser")}:${summary.by_source?.browser ?? 0} | ${t("source_network")}:${
+      summary.by_source?.network ?? 0
+    } | ${t("source_integration")}:${summary.by_source?.integration ?? 0} | ${t("source_demo")}:${
+      summary.by_source?.demo ?? 0
+    }`;
+    return;
+  }
   ui.channelSummary.textContent = `work:${summary.by_channel_type?.work ?? 0} | finance:${summary.by_channel_type?.finance ?? 0} | mixed:${summary.by_channel_type?.mixed ?? 0}`;
   ui.consentSummary.textContent = `granted:${summary.consent?.granted ?? 0} | revoked:${summary.consent?.revoked ?? 0} | not_granted:${summary.consent?.not_granted ?? 0}`;
   ui.sourceSummary.textContent = `browser:${summary.by_source?.browser ?? 0} | network:${summary.by_source?.network ?? 0} | integration:${summary.by_source?.integration ?? 0} | demo:${summary.by_source?.demo ?? 0}`;
@@ -379,13 +717,19 @@ function formatScopes(scopes) {
   if (!scopes) return "-";
   const enabled = Object.entries(scopes)
     .filter(([, value]) => Boolean(value))
-    .map(([key]) => key.replaceAll("_", " "));
-  return enabled.length ? enabled.join(", ") : "none";
+    .map(([key]) => {
+      if (currentLang !== "zh") return key.replaceAll("_", " ");
+      if (key === "telemetry") return t("scope_label_telemetry");
+      if (key === "school_support") return t("scope_label_school_support");
+      if (key === "partner_offers") return t("scope_label_partner_offers");
+      return key.replaceAll("_", " ");
+    });
+  return enabled.length ? enabled.join(", ") : currentLang === "zh" ? "无" : "none";
 }
 
 function renderConsentRows(items) {
   if (!items.length) {
-    ui.consentBody.innerHTML = `<tr><td colspan="6">No consent events found.</td></tr>`;
+    ui.consentBody.innerHTML = `<tr><td colspan="7">${t("empty_consent_events_found")}</td></tr>`;
     return;
   }
 
@@ -408,7 +752,7 @@ function renderConsentRows(items) {
 
 function renderConsentProfiles(items) {
   if (!items.length) {
-    ui.consentProfilesBody.innerHTML = `<tr><td colspan="6">No consent profiles found.</td></tr>`;
+    ui.consentProfilesBody.innerHTML = `<tr><td colspan="6">${t("empty_consent_profiles_found")}</td></tr>`;
     return;
   }
 
@@ -440,7 +784,7 @@ function renderResourceList(target, items, emptyMessage) {
       <article class="resource-item">
         <strong>${item.title || "-"}</strong>
         <p>${item.description || "-"}</p>
-        <p><strong>Steps:</strong> ${(item.steps || []).join("; ") || "-"}</p>
+        <p><strong>${currentLang === "zh" ? "下一步建议" : "Steps"}:</strong> ${(item.steps || []).join("; ") || "-"}</p>
       </article>
     `
     )
@@ -449,7 +793,7 @@ function renderResourceList(target, items, emptyMessage) {
 
 function renderNetworkRows(items) {
   if (!items.length) {
-    ui.networkBody.innerHTML = `<tr><td colspan="6">No network signals found.</td></tr>`;
+    ui.networkBody.innerHTML = `<tr><td colspan="6">${t("empty_network_signals_found")}</td></tr>`;
     return;
   }
 
@@ -476,7 +820,7 @@ function shortHash(value) {
 
 function renderAuditRows(items) {
   if (!items.length) {
-    ui.auditBody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
+    ui.auditBody.innerHTML = `<tr><td colspan="6">${t("empty_audit_events_found")}</td></tr>`;
     return;
   }
 
@@ -507,10 +851,11 @@ async function fetchJson(url) {
 
 async function loadStudentHistory() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
-  const sessionId = ui.studentSessionId.value.trim();
+  const sessionId = (ui.timelineSessionId?.value || ui.studentSessionId.value || "").trim();
   if (!sessionId) {
-    ui.studentHistoryMeta.textContent = "Paste a student session ID first.";
-    ui.studentHistoryOutput.textContent = "No student timeline loaded yet.";
+    ui.studentHistoryMeta.textContent =
+      currentLang === "zh" ? "请先在上方输入学生会话 ID。" : "Paste a student session ID in the input above first.";
+    ui.studentHistoryOutput.textContent = t("timeline_empty");
     return;
   }
 
@@ -518,11 +863,15 @@ async function loadStudentHistory() {
     const result = await fetchJson(
       `${baseUrl.replace(/\/$/, "")}/api/student/history?session_id=${encodeURIComponent(sessionId)}&limit=20`
     );
-    ui.studentHistoryMeta.textContent = `Loaded timeline for ${sessionId}.`;
+    ui.studentHistoryMeta.textContent =
+      currentLang === "zh" ? `已加载会话 ${sessionId} 的时间线。` : `Loaded timeline for ${sessionId}.`;
     ui.studentHistoryOutput.textContent = JSON.stringify(result.data, null, 2);
   } catch (error) {
-    ui.studentHistoryMeta.textContent = `Student timeline request failed: ${error.message}`;
-    ui.studentHistoryOutput.textContent = "Unable to load student timeline.";
+    ui.studentHistoryMeta.textContent =
+      currentLang === "zh"
+        ? `${t("err_timeline_failed_prefix")} ${error.message}`
+        : `Student timeline request failed: ${error.message}`;
+    ui.studentHistoryOutput.textContent = currentLang === "zh" ? "无法加载学生时间线。" : "Unable to load student timeline.";
   }
 }
 
@@ -539,7 +888,7 @@ async function refreshEvents() {
     fetchJson(`${baseUrl.replace(/\/$/, "")}/api/risk-events/summary`),
     fetchJson(`${baseUrl.replace(/\/$/, "")}/api/consent-events?limit=20`),
     fetchJson(`${baseUrl.replace(/\/$/, "")}/api/consent-profiles?limit=20`),
-    fetchJson(`${baseUrl.replace(/\/$/, "")}/api/support/resources`),
+    fetchJson(`${baseUrl.replace(/\/$/, "")}/api/support/resources?lang=${currentLang}`),
     fetchJson(`${baseUrl.replace(/\/$/, "")}/api/network/signals?limit=20`),
     fetchJson(`${baseUrl.replace(/\/$/, "")}/api/audit-events?limit=20`)
   ]);
@@ -548,7 +897,7 @@ async function refreshEvents() {
     const result = eventsCall.value;
     const items = result?.data?.items || [];
     renderRows(items);
-    ui.meta.textContent = `Loaded ${items.length} / total ${result?.data?.total ?? 0} item(s).`;
+    ui.meta.textContent = formatTemplate("meta_loaded_items", { loaded: items.length, total: result?.data?.total ?? 0 });
   } else {
     ui.meta.textContent = `Event request failed: ${eventsCall.reason?.message || "unknown error"}`;
     ui.eventsBody.innerHTML = `<tr><td colspan="9">Unable to load events.</td></tr>`;
@@ -567,7 +916,10 @@ async function refreshEvents() {
     const consentResult = consentCall.value;
     const consentItems = consentResult?.data?.items || [];
     renderConsentRows(consentItems);
-    ui.consentMeta.textContent = `Loaded ${consentItems.length} / total ${consentResult?.data?.total ?? 0} consent event(s).`;
+    ui.consentMeta.textContent = formatTemplate("meta_loaded_consent_events", {
+      loaded: consentItems.length,
+      total: consentResult?.data?.total ?? 0
+    });
   } else {
     ui.consentMeta.textContent = `Consent request failed: ${consentCall.reason?.message || "unknown error"}`;
     ui.consentBody.innerHTML = `<tr><td colspan="6">Unable to load consent events.</td></tr>`;
@@ -577,7 +929,10 @@ async function refreshEvents() {
     const profileResult = consentProfilesCall.value;
     const profileItems = profileResult?.data?.items || [];
     renderConsentProfiles(profileItems);
-    ui.consentProfileMeta.textContent = `Loaded ${profileItems.length} / total ${profileResult?.data?.total ?? 0} consent profile(s).`;
+    ui.consentProfileMeta.textContent = formatTemplate("meta_loaded_consent_profiles", {
+      loaded: profileItems.length,
+      total: profileResult?.data?.total ?? 0
+    });
   } else {
     ui.consentProfileMeta.textContent = `Consent profile request failed: ${consentProfilesCall.reason?.message || "unknown error"}`;
     ui.consentProfilesBody.innerHTML = `<tr><td colspan="6">Unable to load consent profiles.</td></tr>`;
@@ -585,9 +940,12 @@ async function refreshEvents() {
 
   if (supportCall.status === "fulfilled") {
     const supportData = supportCall.value?.data || {};
-    renderResourceList(ui.educationResources, supportData.education || [], "No education resources found.");
-    renderResourceList(ui.wellbeingResources, supportData.wellbeing || [], "No wellbeing resources found.");
-    ui.supportMeta.textContent = `Education ${supportData.education?.length ?? 0}, wellbeing ${supportData.wellbeing?.length ?? 0} resource(s).`;
+    renderResourceList(ui.educationResources, supportData.education || [], t("empty_education_resources"));
+    renderResourceList(ui.wellbeingResources, supportData.wellbeing || [], t("empty_wellbeing_resources"));
+    ui.supportMeta.textContent = formatTemplate("support_meta_counts", {
+      education: supportData.education?.length ?? 0,
+      wellbeing: supportData.wellbeing?.length ?? 0
+    });
   } else {
     ui.supportMeta.textContent = `Support resource request failed: ${supportCall.reason?.message || "unknown error"}`;
     ui.educationResources.textContent = "Unable to load education resources.";
@@ -598,7 +956,10 @@ async function refreshEvents() {
     const networkResult = networkCall.value;
     const networkItems = networkResult?.data?.items || [];
     renderNetworkRows(networkItems);
-    ui.networkMeta.textContent = `Loaded ${networkItems.length} / total ${networkResult?.data?.total ?? 0} network signal(s).`;
+    ui.networkMeta.textContent = formatTemplate("meta_loaded_network_signals", {
+      loaded: networkItems.length,
+      total: networkResult?.data?.total ?? 0
+    });
   } else {
     ui.networkMeta.textContent = `Network request failed: ${networkCall.reason?.message || "unknown error"}`;
     ui.networkBody.innerHTML = `<tr><td colspan="6">Unable to load network signals.</td></tr>`;
@@ -608,7 +969,10 @@ async function refreshEvents() {
     const auditResult = auditCall.value;
     const auditItems = auditResult?.data?.items || [];
     renderAuditRows(auditItems);
-    ui.auditMeta.textContent = `Loaded ${auditItems.length} / total ${auditResult?.data?.total ?? 0} audit event(s).`;
+    ui.auditMeta.textContent = formatTemplate("meta_loaded_audit_events", {
+      loaded: auditItems.length,
+      total: auditResult?.data?.total ?? 0
+    });
   } else {
     ui.auditMeta.textContent = `Audit request failed: ${auditCall.reason?.message || "unknown error"}`;
     ui.auditBody.innerHTML = `<tr><td colspan="6">Unable to load audit events.</td></tr>`;
@@ -648,7 +1012,10 @@ async function seedDemoData() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/seed`);
-  ui.meta.textContent = `Loaded demo dataset: ${result?.data?.risk_events ?? 0} support events`;
+  ui.meta.textContent =
+    currentLang === "zh"
+      ? `已加载演示数据：${result?.data?.risk_events ?? 0} 条支持事件`
+      : `Loaded demo dataset: ${result?.data?.risk_events ?? 0} support events`;
   await refreshEvents();
 }
 
@@ -656,7 +1023,10 @@ async function resetDemoData() {
   const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
   setApiBaseUrl(baseUrl);
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/reset`);
-  ui.meta.textContent = `Cleared demo dataset: ${result?.data?.risk_events ?? 0} support events`;
+  ui.meta.textContent =
+    currentLang === "zh"
+      ? `已清空演示数据：${result?.data?.risk_events ?? 0} 条支持事件`
+      : `Cleared demo dataset: ${result?.data?.risk_events ?? 0} support events`;
   await refreshEvents();
 }
 
@@ -689,23 +1059,79 @@ function init() {
     });
   }
   applyLanguage();
-  ui.apiBaseUrl.value = getApiBaseUrl();
+  try {
+    const savedAudit = localStorage.getItem(AUDIT_COLLAPSED_KEY);
+    if (savedAudit === "1") {
+      setAuditCollapsed(true);
+    } else {
+      syncAuditToggleLabel();
+    }
+  } catch (_e) {
+    syncAuditToggleLabel();
+  }
+  ui.auditToggleBtn?.addEventListener("click", () => {
+    setAuditCollapsed(!isAuditCollapsed());
+  });
+  ui.eventsToggleBtn?.addEventListener("click", () => {
+    setEventsCollapsed(!isEventsCollapsed());
+  });
+  ui.timelineToggleBtn?.addEventListener("click", () => {
+    setTimelineCollapsed(!isTimelineCollapsed());
+  });
+  try {
+    const savedEvents = localStorage.getItem(EVENTS_COLLAPSED_KEY);
+    if (savedEvents === "1") {
+      setEventsCollapsed(true);
+    } else {
+      syncEventsToggleLabel();
+    }
+  } catch (_e) {
+    syncEventsToggleLabel();
+  }
+  try {
+    const savedTimeline = localStorage.getItem(TIMELINE_COLLAPSED_KEY);
+    if (savedTimeline === "1") {
+      setTimelineCollapsed(true);
+    } else {
+      syncTimelineToggleLabel();
+    }
+  } catch (_e) {
+    syncTimelineToggleLabel();
+  }
+
+  const resolvedApiBase = getApiBaseUrl();
+  ui.apiBaseUrl.value = resolvedApiBase;
+  setApiBaseUrl(resolvedApiBase);
   ui.apiKey.value = getApiKey();
+  if (ui.timelineSessionId) {
+    ui.timelineSessionId.value = ui.studentSessionId.value || "";
+    ui.timelineSessionId.addEventListener("input", () => {
+      ui.studentSessionId.value = ui.timelineSessionId.value;
+    });
+    ui.studentSessionId.addEventListener("input", () => {
+      ui.timelineSessionId.value = ui.studentSessionId.value;
+    });
+  }
   ui.refreshBtn.addEventListener("click", refreshEvents);
   ui.exportBtn.addEventListener("click", exportCsv);
   ui.loadStudentHistoryBtn.addEventListener("click", () => {
     loadStudentHistory().catch((error) => {
-      ui.studentHistoryMeta.textContent = `Student timeline request failed: ${error.message}`;
+      ui.studentHistoryMeta.textContent =
+        currentLang === "zh"
+          ? `${t("err_timeline_failed_prefix")} ${error.message}`
+          : `Student timeline request failed: ${error.message}`;
     });
   });
   ui.seedDemoBtn.addEventListener("click", () => {
     seedDemoData().catch((error) => {
-      ui.meta.textContent = `Seed failed: ${error.message}`;
+      ui.meta.textContent =
+        currentLang === "zh" ? `${t("err_seed_failed_prefix")} ${error.message}` : `Seed failed: ${error.message}`;
     });
   });
   ui.resetDemoBtn.addEventListener("click", () => {
     resetDemoData().catch((error) => {
-      ui.meta.textContent = `Reset failed: ${error.message}`;
+      ui.meta.textContent =
+        currentLang === "zh" ? `${t("err_clear_failed_prefix")} ${error.message}` : `Reset failed: ${error.message}`;
     });
   });
   ui.autoRefresh.addEventListener("change", () => {
