@@ -1,0 +1,73 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build static site bundle
+        shell: bash
+        run: |
+          rm -rf dist
+          mkdir -p dist/student dist/console
+          cp -R apps/student-plugin/* dist/student/
+          cp -R apps/school-console/* dist/console/
+          cat > dist/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>LoanShield Web Demo</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 24px; background: #f3f4f6; color: #111827; }
+                .card { background: #fff; border: 1px solid #d1d5db; border-radius: 10px; max-width: 760px; padding: 20px; }
+                a { display: inline-block; margin: 10px 14px 0 0; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <h1>LoanShield Web Demo</h1>
+                <p>Open each frontend:</p>
+                <a href="./student/">Student Plugin</a>
+                <a href="./console/">School Console</a>
+                <p><strong>Note:</strong> this is static hosting for UI review. Set a reachable backend URL inside each app settings panel.</p>
+              </div>
+            </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
