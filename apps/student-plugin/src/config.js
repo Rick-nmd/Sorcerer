@@ -15,10 +15,20 @@ function isLocalHttpPage() {
 }
 
 export function getApiBaseUrl() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored !== null && stored !== "") {
+  const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
+  if (stored !== "") {
     // Migrate stale local default (hard-coded :8787) to same-origin proxy mode.
-    if (stored.trim() === defaultApiBaseUrl && isLocalHttpPage()) {
+    if (stored === defaultApiBaseUrl && isLocalHttpPage()) {
+      return "";
+    }
+    // On public HTTPS pages, avoid mixed-content requests to localhost defaults.
+    if (
+      typeof window !== "undefined" &&
+      window.location &&
+      window.location.protocol === "https:" &&
+      !isLocalHttpPage() &&
+      /^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(stored)
+    ) {
       return "";
     }
     return stored;
@@ -28,6 +38,10 @@ export function getApiBaseUrl() {
     return defaultApiBaseUrl;
   }
   if (isLocalHttpPage()) {
+    return "";
+  }
+  // On public HTTPS pages (e.g. GitHub Pages), require explicit backend URL.
+  if (typeof window !== "undefined" && window.location && window.location.protocol === "https:") {
     return "";
   }
   return defaultApiBaseUrl;
