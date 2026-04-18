@@ -6,15 +6,32 @@ function buildHeaders(apiKey) {
   return headers;
 }
 
+function assertApiBaseUrl(apiBaseUrl) {
+  const base = String(apiBaseUrl || "").trim();
+  if (!base) {
+    throw new Error("Backend URL is required. Set an HTTPS API root in Settings.");
+  }
+  return base.replace(/\/$/, "");
+}
+
+async function readJsonResponse(response) {
+  try {
+    return await response.json();
+  } catch (_error) {
+    throw new Error(`Invalid API response (HTTP ${response.status}). Check Backend URL.`);
+  }
+}
+
 export async function uploadRiskEvent({ apiBaseUrl, eventPayload, apiKey = "" }) {
-  const url = `${apiBaseUrl.replace(/\/$/, "")}/api/risk-events`;
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
+  const url = `${baseUrl}/api/risk-events`;
   const response = await fetch(url, {
     method: "POST",
     headers: buildHeaders(apiKey),
     body: JSON.stringify(eventPayload)
   });
 
-  const json = await response.json();
+  const json = await readJsonResponse(response);
   return {
     ok: response.ok,
     status: response.status,
@@ -23,14 +40,15 @@ export async function uploadRiskEvent({ apiBaseUrl, eventPayload, apiKey = "" })
 }
 
 export async function uploadConsentEvent({ apiBaseUrl, consentPayload, apiKey = "" }) {
-  const url = `${apiBaseUrl.replace(/\/$/, "")}/api/consent-events`;
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
+  const url = `${baseUrl}/api/consent-events`;
   const response = await fetch(url, {
     method: "POST",
     headers: buildHeaders(apiKey),
     body: JSON.stringify(consentPayload)
   });
 
-  const json = await response.json();
+  const json = await readJsonResponse(response);
   return {
     ok: response.ok,
     status: response.status,
@@ -42,7 +60,7 @@ async function getJson(url, apiKey = "") {
   const response = await fetch(url, {
     headers: apiKey ? { "x-api-key": apiKey } : {}
   });
-  const json = await response.json();
+  const json = await readJsonResponse(response);
   if (!response.ok || !json.success) {
     const message = json?.message || `Request failed with status ${response.status}`;
     throw new Error(message);
@@ -51,7 +69,7 @@ async function getJson(url, apiKey = "") {
 }
 
 export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel, apiKey = "" }) {
-  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
 
   if (riskLevel === "R1") {
     const work = await getJson(`${baseUrl}/api/channels/work-study`, apiKey);
@@ -66,12 +84,12 @@ export async function fetchChannelRecommendations({ apiBaseUrl, riskLevel, apiKe
 }
 
 export async function fetchStudentConsentProfile({ apiBaseUrl, sessionId, apiKey = "" }) {
-  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
   return getJson(`${baseUrl}/api/student/consent-profile?session_id=${encodeURIComponent(sessionId)}`, apiKey);
 }
 
 export async function fetchStudentHistory({ apiBaseUrl, sessionId, limit = 20, apiKey = "" }) {
-  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
   return getJson(
     `${baseUrl}/api/student/history?session_id=${encodeURIComponent(sessionId)}&limit=${encodeURIComponent(limit)}`,
     apiKey
@@ -79,7 +97,7 @@ export async function fetchStudentHistory({ apiBaseUrl, sessionId, limit = 20, a
 }
 
 export async function fetchSupportResources({ apiBaseUrl, apiKey = "", lang = "en" }) {
-  const baseUrl = apiBaseUrl.replace(/\/$/, "");
+  const baseUrl = assertApiBaseUrl(apiBaseUrl);
   const safeLang = lang === "zh" ? "zh" : "en";
   return getJson(`${baseUrl}/api/support/resources?lang=${safeLang}`, apiKey);
 }
