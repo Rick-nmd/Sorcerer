@@ -136,7 +136,7 @@ const I18N = {
     title_main: "Campus Support Console",
     tip_label: "Tip:",
     tip_text:
-      "use the backend port printed in your terminal (for example from npm run demo). Example: http://localhost:8788/console (the port may differ from 8787).",
+      "Local: use the port from your terminal (npm run demo), e.g. http://localhost:8788/console. GitHub Pages / HTTPS: set Backend URL to your deployed API root (e.g. https://your-service.onrender.com) — the static site does not host the API.",
     h2_filters: "Query & filters",
     label_language: "Language / 语言",
     label_backend_url: "Backend URL",
@@ -228,7 +228,10 @@ const I18N = {
     events_toggle_collapse: "Collapse",
     events_toggle_expand: "Expand",
     timeline_toggle_collapse: "Collapse",
-    timeline_toggle_expand: "Expand"
+    timeline_toggle_expand: "Expand",
+    err_backend_url_required:
+      "Set Backend URL to your API root (e.g. https://….onrender.com). HTTPS pages cannot use http://localhost.",
+    err_summary_unavailable: "Summary unavailable (API request failed)."
   },
   zh: {
     title: "贷盾：学校支持平台",
@@ -236,7 +239,7 @@ const I18N = {
     title_main: "学校支持平台",
     tip_label: "提示：",
     tip_text:
-      "请使用终端输出的后端端口（例如通过 npm run demo 启动）。示例：http://localhost:8788/console（端口不一定是 8787）。",
+      "本地：请填终端里的后端端口（npm run demo），如 http://localhost:8788/console。GitHub Pages / 公网 HTTPS：请在「后端地址」填写已部署的 API 根地址（如 https://xxx.onrender.com），静态网页本身不提供接口。",
     h2_filters: "查询与筛选",
     label_language: "语言 / Language",
     label_backend_url: "后端地址",
@@ -345,7 +348,9 @@ const I18N = {
     events_toggle_collapse: "收起",
     events_toggle_expand: "展开",
     timeline_toggle_collapse: "收起",
-    timeline_toggle_expand: "展开"
+    timeline_toggle_expand: "展开",
+    err_backend_url_required: "请填写后端地址（API 根路径），例如 https://xxx.onrender.com。HTTPS 页面不能使用 http://localhost。",
+    err_summary_unavailable: "汇总不可用（接口请求失败）。"
   }
 };
 
@@ -602,25 +607,46 @@ function applyLanguage() {
 
 function getApiBaseUrl() {
   const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
-  const fallback = "http://localhost:8787";
+  const fallbackLocal = "http://localhost:8787";
 
   if (typeof window !== "undefined" && window.location) {
     const { protocol, origin, pathname, hostname } = window.location;
     const isHttpPage = protocol === "http:" || protocol === "https:";
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-    const onConsolePath = pathname.startsWith("/console");
+    const onConsolePath = pathname.includes("/console");
 
-    // If opened from backend /console, same-origin is the safest default.
-    if (isHttpPage && onConsolePath) {
+    // Same-origin backend: e.g. http://localhost:8788/console — API lives on the same host.
+    if (isHttpPage && onConsolePath && isLocalHost) {
       const staleLocalDefaults = new Set(["http://localhost:8787", "http://127.0.0.1:8787"]);
       const isStoredLocal = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(stored);
-      if (!stored || (isLocalHost && isStoredLocal && stored !== origin) || (isLocalHost && staleLocalDefaults.has(stored))) {
+      if (!stored || (isStoredLocal && stored !== origin) || staleLocalDefaults.has(stored)) {
         return origin;
       }
     }
+
+    if (stored) return stored;
+
+    // GitHub Pages / HTTPS on the public internet: do not default to http://localhost (mixed content + wrong host).
+    if (protocol === "https:" && !isLocalHost) {
+      return "";
+    }
   }
 
-  return stored || fallback;
+  return stored || fallbackLocal;
+}
+
+/** Resolves API root from the input field, then localStorage, then safe defaults. */
+function resolveBackendBaseUrl() {
+  const fromField = ui.apiBaseUrl.value.trim();
+  if (fromField) return fromField.replace(/\/$/, "");
+  const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
+  if (stored) return stored.replace(/\/$/, "");
+  const { protocol, hostname } = window.location;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  if (protocol === "https:" && !isLocal) {
+    return "";
+  }
+  return "http://localhost:8787";
 }
 
 function setApiBaseUrl(value) {
@@ -842,15 +868,35 @@ function renderAuditRows(items) {
 
 async function fetchJson(url) {
   const response = await fetch(url, { headers: authHeaders() });
-  const json = await response.json();
+  let json;
+  try {
+    json = await response.json();
+  } catch (_e) {
+    throw new Error(`Invalid response (HTTP ${response.status}). Is the Backend URL correct?`);
+  }
   if (!response.ok || !json.success) {
-    throw new Error(json?.message || `Request failed with status ${response.status}`);
+    const msg = json?.message || `Request failed with status ${response.status}`;
+    const hint = response.status === 401 ? " Check API key if the server requires authentication." : "";
+    throw new Error(`${msg}${hint}`);
   }
   return json;
 }
 
+function setSummaryFailed() {
+  ui.totalEvents.textContent = "-";
+  ui.riskSummary.textContent = "unavailable";
+  ui.channelSummary.textContent = "unavailable";
+  ui.consentSummary.textContent = "unavailable";
+  ui.sourceSummary.textContent = "unavailable";
+}
+
 async function loadStudentHistory() {
-  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  const baseUrl = resolveBackendBaseUrl();
+  if (!baseUrl) {
+    ui.studentHistoryMeta.textContent = t("err_backend_url_required");
+    ui.studentHistoryOutput.textContent = "";
+    return;
+  }
   const sessionId = (ui.timelineSessionId?.value || ui.studentSessionId.value || "").trim();
   if (!sessionId) {
     ui.studentHistoryMeta.textContent =
@@ -876,8 +922,15 @@ async function loadStudentHistory() {
 }
 
 async function refreshEvents() {
-  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  const baseUrl = resolveBackendBaseUrl();
+  if (!baseUrl) {
+    ui.meta.textContent = t("err_backend_url_required");
+    ui.eventsBody.innerHTML = `<tr><td colspan="9">${t("err_backend_url_required")}</td></tr>`;
+    setSummaryFailed();
+    return;
+  }
   setApiBaseUrl(baseUrl);
+  ui.apiBaseUrl.value = baseUrl;
   setApiKey(ui.apiKey.value);
 
   const query = buildQueryString();
@@ -906,10 +959,10 @@ async function refreshEvents() {
   if (summaryCall.status === "fulfilled") {
     renderSummary(summaryCall.value?.data);
   } else {
-    ui.totalEvents.textContent = "-";
-    ui.riskSummary.textContent = "unavailable";
-    ui.channelSummary.textContent = "unavailable";
-    ui.consentSummary.textContent = "unavailable";
+    setSummaryFailed();
+    if (eventsCall.status === "fulfilled") {
+      ui.meta.textContent = `${ui.meta.textContent} (${t("err_summary_unavailable")})`;
+    }
   }
 
   if (consentCall.status === "fulfilled") {
@@ -980,8 +1033,13 @@ async function refreshEvents() {
 }
 
 function exportCsv() {
-  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  const baseUrl = resolveBackendBaseUrl();
+  if (!baseUrl) {
+    ui.meta.textContent = t("err_backend_url_required");
+    return;
+  }
   setApiBaseUrl(baseUrl);
+  ui.apiBaseUrl.value = baseUrl;
   setApiKey(ui.apiKey.value);
   const url = `${baseUrl.replace(/\/$/, "")}/api/risk-events/export.csv`;
   fetch(url, { headers: authHeaders() })
@@ -1005,12 +1063,28 @@ async function postJson(url) {
       ...authHeaders()
     }
   });
-  return response.json();
+  let json;
+  try {
+    json = await response.json();
+  } catch (_e) {
+    throw new Error(`Invalid response (HTTP ${response.status})`);
+  }
+  if (!response.ok || !json.success) {
+    const msg = json?.message || `Request failed with status ${response.status}`;
+    const hint = response.status === 401 ? " Check API key if required." : "";
+    throw new Error(`${msg}${hint}`);
+  }
+  return json;
 }
 
 async function seedDemoData() {
-  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  const baseUrl = resolveBackendBaseUrl();
+  if (!baseUrl) {
+    ui.meta.textContent = t("err_backend_url_required");
+    return;
+  }
   setApiBaseUrl(baseUrl);
+  ui.apiBaseUrl.value = baseUrl;
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/seed`);
   ui.meta.textContent =
     currentLang === "zh"
@@ -1020,8 +1094,13 @@ async function seedDemoData() {
 }
 
 async function resetDemoData() {
-  const baseUrl = ui.apiBaseUrl.value.trim() || "http://localhost:8787";
+  const baseUrl = resolveBackendBaseUrl();
+  if (!baseUrl) {
+    ui.meta.textContent = t("err_backend_url_required");
+    return;
+  }
   setApiBaseUrl(baseUrl);
+  ui.apiBaseUrl.value = baseUrl;
   const result = await postJson(`${baseUrl.replace(/\/$/, "")}/api/demo/reset`);
   ui.meta.textContent =
     currentLang === "zh"
