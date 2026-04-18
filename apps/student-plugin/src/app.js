@@ -159,7 +159,7 @@ const I18N = {
     btn_load_scenario_sample: "Load demo text",
     msg_fetch_page_ok: "Page text loaded from URL.",
     msg_url_fetch_fail_prefix: "URL fetch failed:",
-    placeholder_api_base: "http://localhost:8787",
+    placeholder_api_base: "http://localhost:8787 or https://your-api.onrender.com",
     placeholder_api_key: "x-api-key value",
     placeholder_consent_note: "Optional note for this consent update",
     placeholder_page_text: "Paste page text, CTA, and marketing copy...",
@@ -306,7 +306,7 @@ const I18N = {
     btn_load_scenario_sample: "插入演示文案",
     msg_fetch_page_ok: "已从网址加载页面文本。",
     msg_url_fetch_fail_prefix: "网址抓取失败：",
-    placeholder_api_base: "http://localhost:8787",
+    placeholder_api_base: "http://localhost:8787 或 https://your-api.onrender.com",
     placeholder_api_key: "x-api-key 值",
     placeholder_consent_note: "可选：本次同意变更备注",
     placeholder_page_text: "粘贴页面文案、按钮文案、营销话术…",
@@ -721,6 +721,15 @@ function safeUrl(raw) {
   }
 }
 
+function escapeHtml(value) {
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function renderRegularChannels(recommendations) {
   const regular = (recommendations || []).filter((item) => item.channel_type === "finance");
   if (!regular.length) {
@@ -828,11 +837,12 @@ function renderResourceList(target, items, emptyMessage) {
   target.innerHTML = items
     .map((item) => {
       const safeLink = safeUrl(item.url);
+      const safeSteps = Array.isArray(item.steps) ? item.steps.map((x) => escapeHtml(x)).join("; ") : "";
       return `
         <article class="resource-card">
-          <h3>${item.title}</h3>
-          <p>${item.description}</p>
-          ${item.steps?.length ? `<p><strong>${t("resource_next_steps")}:</strong> ${item.steps.join("; ")}</p>` : ""}
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.description)}</p>
+          ${safeSteps ? `<p><strong>${t("resource_next_steps")}:</strong> ${safeSteps}</p>` : ""}
           ${safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener noreferrer">${t("open_resource")}</a>` : ""}
         </article>
       `;
