@@ -3,7 +3,196 @@
   if (window[FLAG]) return;
   window[FLAG] = true;
 
-  const BACKEND_BASE = "http://127.0.0.1:8787";
+  function resolveBackendBase() {
+    if (typeof window === "undefined" || !window.location) return "";
+    const { protocol, hostname, origin } = window.location;
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+    if (isLocalHost && (protocol === "http:" || protocol === "https:")) {
+      // Local demo often runs backend on the same origin/port as /console.
+      return origin;
+    }
+    if (protocol === "http:") {
+      // Non-HTTPS pages can still call localhost backend during local demos.
+      return "http://127.0.0.1:8787";
+    }
+    if (protocol === "file:") {
+      return "http://127.0.0.1:8787";
+    }
+    // Public HTTPS pages should not force localhost backend (mixed-content / blocked network).
+    return "";
+  }
+
+  const BACKEND_BASE = resolveBackendBase();
+  const REGULATED_EDUCATION_CREDIT_URL = "https://example.org/regulated-student-credit";
+
+  /** Same structure as demo `buildMockWorkStudyOptions` / finance cards in `app.js`. */
+  const STATIC_CAMPUS_WORK = [
+    {
+      recommendation_id: "work_001",
+      channel_type: "work",
+      title: "Library Assistant (Campus)",
+      provider_name: "Campus Library",
+      next_action: "Submit availability and student ID to apply.",
+      why_recommended: [
+        "Stable part-time income can reduce borrowing urgency.",
+        "Campus role has transparent hourly payment."
+      ],
+      data_source: "mock"
+    },
+    {
+      recommendation_id: "work_002",
+      channel_type: "work",
+      title: "Teaching Support Assistant",
+      provider_name: "Academic Affairs Office",
+      next_action: "Apply through campus work-study portal.",
+      why_recommended: ["Short shifts fit class schedule.", "Lower financial risk than emergency lending."],
+      data_source: "mock"
+    }
+  ];
+
+  const STATIC_STUDENT_AFFAIRS_AID = {
+    recommendation_id: "campus_aid_001",
+    channel_type: "campus_support",
+    title: "Student Affairs Emergency Aid",
+    provider_name: "Student Affairs Office",
+    next_action:
+      "Book an appointment or submit a short hardship form (bring student ID). Ask about emergency grants, meal assistance, or tuition deferral before taking a loan.",
+    why_recommended: [
+      "May cover urgent needs without interest or rollover traps.",
+      "Staff can connect you to scholarships and on-campus resources before you borrow."
+    ],
+    data_source: "mock"
+  };
+
+  const STATIC_REGULATED_FINANCE = {
+    recommendation_id: "finance_regulated_001",
+    channel_type: "finance",
+    title: "Regulated Education Credit",
+    provider_name: "Partnered Regulated Institution",
+    apr: 8.5,
+    term_months: 12,
+    eligibility: "Full-time student, no active delinquency in campus account.",
+    integration_status: "demo",
+    institution_verified: true,
+    application_url: REGULATED_EDUCATION_CREDIT_URL,
+    next_action: "Compare APR and full repayment schedule before approval.",
+    why_recommended: [
+      "Lower APR than typical predatory products.",
+      "Regulated provider with clear contract terms."
+    ],
+    data_source: "mock"
+  };
+
+  function escapeHtml(s) {
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function safeHref(url) {
+    if (!url) return REGULATED_EDUCATION_CREDIT_URL;
+    try {
+      const u = new URL(url);
+      if (u.protocol === "http:" || u.protocol === "https:") return u.toString();
+    } catch (_e) {
+      /* ignore */
+    }
+    return REGULATED_EDUCATION_CREDIT_URL;
+  }
+
+  function renderCampusAlternativeCard(item) {
+    const why = Array.isArray(item.why_recommended) ? item.why_recommended.join("; ") : item.why_recommended || "";
+    return `
+      <article style="border:1px solid #dbeafe;border-radius:10px;padding:12px;margin-bottom:12px;background:#f8fafc;">
+        <h3 style="margin:0 0 8px;font-size:15px;">${escapeHtml(item.title)}</h3>
+        <p style="margin:4px 0;font-size:13px;"><strong>Channel:</strong> ${escapeHtml(item.channel_type)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Provider:</strong> ${escapeHtml(item.provider_name)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Next action:</strong> ${escapeHtml(item.next_action)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Why recommended:</strong> ${escapeHtml(why)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Data source:</strong> ${escapeHtml(item.data_source || "local")}</p>
+      </article>
+    `;
+  }
+
+  function renderFinanceAlternativeCard(item) {
+    const url = safeHref(item.application_url || REGULATED_EDUCATION_CREDIT_URL);
+    const why = Array.isArray(item.why_recommended) ? item.why_recommended.join("; ") : item.why_recommended || "";
+    const verified = item.institution_verified ? "Yes" : "Pending";
+    return `
+      <article style="border:1px solid #c7d2fe;border-radius:10px;padding:12px;margin-bottom:12px;background:#eef2ff;">
+        <h3 style="margin:0 0 8px;font-size:15px;">${escapeHtml(item.title)}</h3>
+        <p style="margin:4px 0;font-size:13px;"><strong>Provider:</strong> ${escapeHtml(item.provider_name)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>APR:</strong> ${escapeHtml(item.apr != null ? `${item.apr}%` : "—")}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Term:</strong> ${escapeHtml(item.term_months != null ? `${item.term_months} months` : "—")}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Eligibility:</strong> ${escapeHtml(item.eligibility || "—")}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Integration status:</strong> ${escapeHtml(item.integration_status || "—")}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Institution verified:</strong> ${escapeHtml(verified)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Next action:</strong> ${escapeHtml(item.next_action)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Why recommended:</strong> ${escapeHtml(why)}</p>
+        <p style="margin:4px 0;font-size:13px;"><strong>Data source:</strong> ${escapeHtml(item.data_source || "local")}</p>
+        <p style="margin:8px 0 0;font-size:13px;">
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:600;">Open regulated education credit (compare full schedule)</a>
+        </p>
+      </article>
+    `;
+  }
+
+  async function buildAlternativesBodyHtml(riskLevel) {
+    let campusItems = [...STATIC_CAMPUS_WORK];
+    let financeFromApi = [];
+
+    if (BACKEND_BASE) {
+      try {
+        const [wRes, fRes] = await Promise.all([
+          fetch(`${BACKEND_BASE}/api/channels/work-study`),
+          fetch(`${BACKEND_BASE}/api/channels/finance`)
+        ]);
+        const wJson = await wRes.json().catch(() => ({}));
+        const fJson = await fRes.json().catch(() => ({}));
+        if (wRes.ok && wJson?.success && Array.isArray(wJson.data) && wJson.data.length) {
+          campusItems = wJson.data.filter((x) => x && x.channel_type !== "finance");
+        }
+        if (fRes.ok && fJson?.success && Array.isArray(fJson.data) && fJson.data.length) {
+          financeFromApi = fJson.data;
+        }
+      } catch (_e) {
+        /* use static */
+      }
+    }
+
+    const isHigherRisk = riskLevel === "R2" || riskLevel === "R3";
+    const campusList = isHigherRisk ? [...campusItems, STATIC_STUDENT_AFFAIRS_AID] : campusItems;
+
+    let financeItems = [];
+    if (isHigherRisk) {
+      financeItems = [STATIC_REGULATED_FINANCE];
+      for (const row of financeFromApi) {
+        if (!row || row.channel_type !== "finance") continue;
+        const t = String(row.title || "").toLowerCase();
+        if (t.includes("regulated") && t.includes("education")) continue;
+        financeItems.push({
+          ...row,
+          application_url:
+            /regulated|education credit|education installment/i.test(String(row.title || "")) ||
+            String(row.application_url || "").includes("regulated-student-credit")
+              ? REGULATED_EDUCATION_CREDIT_URL
+              : row.application_url
+        });
+      }
+    }
+
+    let html = '<p style="margin:0 0 10px;font-size:13px;color:#475569;">Aligned with the web demo: campus channels first, then verified finance when risk is elevated.</p>';
+    html += '<p style="margin:12px 0 6px;font-weight:700;font-size:14px;">Campus alternatives</p>';
+    html += campusList.map(renderCampusAlternativeCard).join("");
+    if (isHigherRisk && financeItems.length) {
+      html += '<p style="margin:16px 0 6px;font-weight:700;font-size:14px;">Verified finance options</p>';
+      html += financeItems.map(renderFinanceAlternativeCard).join("");
+    }
+    return html;
+  }
 
   const PURPOSE_OPTIONS = [
     { value: "daily_expenses", label: "Daily expenses (food, shopping)" },
@@ -57,9 +246,15 @@
     if (m) return Number(m[1]);
     m = /(?:共|总计|合计)\s*(\d{1,3})\s*(?:期|个月)/i.exec(text);
     if (m) return Number(m[1]);
-    // Avoid matching "前3期免息" as total term: require not immediately after 前
-    m = /(?<!前)(\d{1,3})\s*(?:期|个月|months?)/i.exec(text);
-    return m ? Number(m[1]) : null;
+    // Avoid matching "前3期免息" as total term (no lookbehind for older engines)
+    const re = /(\d{1,3})\s*(?:期|个月|months?)/gi;
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      const idx = match.index;
+      if (idx > 0 && text[idx - 1] === "前") continue;
+      return Number(match[1]);
+    }
+    return null;
   }
   function detectUpfrontFees(text) {
     const fees = [];
@@ -237,6 +432,12 @@
   }
 
   async function fetchSupportResources() {
+    if (!BACKEND_BASE) {
+      return {
+        education: [{ title: "Three Questions Before Borrowing", description: "Verify principal, all fees, and full repayment cost before any submit action." }],
+        wellbeing: [{ title: "Campus Counseling and Stress Support", description: "If pressure is high, contact campus counseling or trusted support before borrowing." }]
+      };
+    }
     try {
       const res = await fetch(`${BACKEND_BASE}/api/support/resources?lang=en`);
       const json = await res.json();
@@ -251,6 +452,7 @@
   }
 
   async function submitSchoolEvent(report, answers) {
+    if (!BACKEND_BASE) return;
     const hasFull =
       report.contract != null &&
       report.monthly != null &&
@@ -306,6 +508,10 @@
 
   async function runFlow(report) {
     const answers = {};
+    let aborted = false;
+    const abort = () => {
+      aborted = true;
+    };
 
     // 1) reflective questions
     await new Promise((resolve) => {
@@ -330,10 +536,12 @@
           resolve();
         },
         onCancel() {
+          abort();
           resolve();
         }
       });
     });
+    if (aborted) return false;
 
     // 2) detailed risk items
     await new Promise((resolve) => {
@@ -352,7 +560,7 @@
             <li>Base APR: <strong>${report.baseApr != null ? report.baseApr.toFixed(2) + "%" : "N/A"}</strong></li>
             <li>Effective APR (cashflow IRR): <strong>${fmtAprPct(report.effectiveApr)}</strong></li>
             <li>Hidden-fee delta: <strong>${delta}</strong></li>
-            <li>Detected terms: <strong>${report.hitTerms.length ? report.hitTerms.join(", ") : "None"}</strong></li>
+            <li>Detected terms: <strong>${report.hitTerms.length ? report.hitTerms.map((t) => escapeHtml(t)).join(", ") : "None"}</strong></li>
           </ul>
         `,
         confirmText: "Next",
@@ -361,10 +569,12 @@
           resolve();
         },
         onCancel() {
+          abort();
           resolve();
         }
       });
     });
+    if (aborted) return false;
 
     // 3) risk alert
     await new Promise((resolve) => {
@@ -372,7 +582,7 @@
       showModal({
         title: "Risk Alert",
         bodyHtml: `
-          <p style="font-size:16px;">Current risk level: <strong style="color:${color};">${report.riskLevel}</strong></p>
+          <p style="font-size:16px;">Current risk level: <strong style="color:${color};">${escapeHtml(report.riskLevel)}</strong></p>
           <p>This page uses low-friction lending marketing with potential hidden cost risk. Please pause before submitting.</p>
         `,
         confirmText: "Next",
@@ -381,41 +591,48 @@
           resolve();
         },
         onCancel() {
+          abort();
           resolve();
         }
       });
     });
+    if (aborted) return false;
 
-    // 4) alternatives popup
+    // 4) alternatives popup (detailed cards like demo + regulated credit link)
+    const alternativesBodyHtml = await buildAlternativesBodyHtml(report.riskLevel);
     await new Promise((resolve) => {
-      const alternatives =
-        report.riskLevel === "R1"
-          ? ["Campus work-study board", "Library assistant role", "Teaching support shifts"]
-          : ["Campus work-study board (priority)", "Student affairs emergency aid", "Regulated education credit (compare full repayment schedule)"];
       showModal({
         title: "Recommended Alternatives",
-        bodyHtml: `<ul style="margin:0 0 0 18px;">${alternatives.map((x) => `<li>${x}</li>`).join("")}</ul>`,
+        bodyHtml: alternativesBodyHtml,
         confirmText: "Next",
         onConfirm(_m, overlay) {
           overlay.remove();
           resolve();
         },
         onCancel() {
+          abort();
           resolve();
         }
       });
     });
+    if (aborted) return false;
 
     // 5) safety education + wellbeing
     const resources = await fetchSupportResources();
     await new Promise((resolve) => {
       const eduHtml = (resources.education || [])
         .slice(0, 2)
-        .map((x) => `<li><strong>${x.title}</strong><br/>${x.description || ""}</li>`)
+        .map(
+          (x) =>
+            `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}</li>`
+        )
         .join("");
       const wellHtml = (resources.wellbeing || [])
         .slice(0, 2)
-        .map((x) => `<li><strong>${x.title}</strong><br/>${x.description || ""}</li>`)
+        .map(
+          (x) =>
+            `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}</li>`
+        )
         .join("");
       showModal({
         title: "Safety Education & Wellbeing Support",
@@ -431,12 +648,15 @@
           resolve();
         },
         onCancel() {
+          abort();
           resolve();
         }
       });
     });
+    if (aborted) return false;
 
     await submitSchoolEvent(report, answers);
+    return true;
   }
 
   let interactionCount = 0;
@@ -449,8 +669,8 @@
     if (!report) return;
     flowStarted = true;
     runFlow(report)
-      .then(() => {
-        sessionStorage.setItem(flowStorageKey(), "1");
+      .then((completed) => {
+        if (completed) sessionStorage.setItem(flowStorageKey(), "1");
       })
       .catch(() => {
         // keep host page stable
