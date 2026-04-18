@@ -606,7 +606,7 @@ function applyLanguage() {
 }
 
 function getApiBaseUrl() {
-  const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
+  const stored = normalizeApiBaseUrl((localStorage.getItem(STORAGE_KEY) || "").trim());
   const fallbackLocal = "http://localhost:8787";
 
   if (typeof window !== "undefined" && window.location) {
@@ -635,11 +635,35 @@ function getApiBaseUrl() {
   return stored || fallbackLocal;
 }
 
+/**
+ * Normalizes user-entered backend URL.
+ * - Converts ".../console" or ".../student" to API root.
+ * - Rejects GitHub Pages hosts as API base (static-only host).
+ */
+function normalizeApiBaseUrl(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    if (host.endsWith("github.io")) return "";
+
+    let path = parsed.pathname.replace(/\/+$/, "");
+    path = path.replace(/\/(?:console|student)$/i, "");
+    parsed.pathname = path || "/";
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch (_error) {
+    return value.replace(/\/$/, "");
+  }
+}
+
 /** Resolves API root from the input field, then localStorage, then safe defaults. */
 function resolveBackendBaseUrl() {
-  const fromField = ui.apiBaseUrl.value.trim();
+  const fromField = normalizeApiBaseUrl(ui.apiBaseUrl.value.trim());
   if (fromField) return fromField.replace(/\/$/, "");
-  const stored = (localStorage.getItem(STORAGE_KEY) || "").trim();
+  const stored = normalizeApiBaseUrl((localStorage.getItem(STORAGE_KEY) || "").trim());
   if (stored) return stored.replace(/\/$/, "");
   const { protocol, hostname } = window.location;
   const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
@@ -650,7 +674,7 @@ function resolveBackendBaseUrl() {
 }
 
 function setApiBaseUrl(value) {
-  localStorage.setItem(STORAGE_KEY, value.trim());
+  localStorage.setItem(STORAGE_KEY, normalizeApiBaseUrl(value));
 }
 
 function getApiKey() {
