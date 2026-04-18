@@ -434,8 +434,30 @@
   async function fetchSupportResources() {
     if (!BACKEND_BASE) {
       return {
-        education: [{ title: "Three Questions Before Borrowing", description: "Verify principal, all fees, and full repayment cost before any submit action." }],
-        wellbeing: [{ title: "Campus Counseling and Stress Support", description: "If pressure is high, contact campus counseling or trusted support before borrowing." }]
+        education: [
+          {
+            title: "How to Spot Predatory Loan Traps",
+            description: "Verify principal, hidden fees, and full repayment cost before submitting any application.",
+            url: "https://consumer.ftc.gov/"
+          },
+          {
+            title: "Three Questions Before Borrowing",
+            description: "Check real need, repayment source, and lower-risk alternatives before borrowing.",
+            url: "https://www.consumerfinance.gov/"
+          }
+        ],
+        wellbeing: [
+          {
+            title: "Campus Counseling and Stress Support",
+            description: "If pressure is high, contact campus counseling or trusted support before borrowing.",
+            url: "https://findahelpline.com/"
+          },
+          {
+            title: "Crisis and Peer Support Options",
+            description: "If threats or debt stress affect safety and sleep, ask for crisis or peer support immediately.",
+            url: "https://www.opencounseling.com/suicide-hotlines"
+          }
+        ]
       };
     }
     try {
@@ -446,9 +468,53 @@
       // fallback below
     }
     return {
-      education: [{ title: "Three Questions Before Borrowing", description: "Verify principal, all fees, and full repayment cost before any submit action." }],
-      wellbeing: [{ title: "Campus Counseling and Stress Support", description: "If pressure is high, contact campus counseling or trusted support before borrowing." }]
+      education: [
+        {
+          title: "How to Spot Predatory Loan Traps",
+          description: "Verify principal, hidden fees, and full repayment cost before submitting any application.",
+          url: "https://consumer.ftc.gov/"
+        },
+        {
+          title: "Three Questions Before Borrowing",
+          description: "Check real need, repayment source, and lower-risk alternatives before borrowing.",
+          url: "https://www.consumerfinance.gov/"
+        }
+      ],
+      wellbeing: [
+        {
+          title: "Campus Counseling and Stress Support",
+          description: "If pressure is high, contact campus counseling or trusted support before borrowing.",
+          url: "https://findahelpline.com/"
+        },
+        {
+          title: "Crisis and Peer Support Options",
+          description: "If threats or debt stress affect safety and sleep, ask for crisis or peer support immediately.",
+          url: "https://www.opencounseling.com/suicide-hotlines"
+        }
+      ]
     };
+  }
+
+  function buildWhyGuidanceText(report) {
+    const reasons = [];
+    if (report.upfrontFee > 0 && report.contract > 0) {
+      reasons.push(
+        `upfront fee deducted before disbursement (${fmtMoney(report.upfrontFee)} from contract ${fmtMoney(report.contract)})`
+      );
+    }
+    if (report.effectiveApr != null) {
+      reasons.push(`cashflow-based Effective APR is ${fmtAprPct(report.effectiveApr)}`);
+    }
+    if (report.baseApr != null && report.effectiveApr != null && report.effectiveApr > report.baseApr) {
+      reasons.push(`effective cost is higher than headline APR (${report.baseApr.toFixed(2)}%)`);
+    }
+    if (report.hitTerms.length) {
+      reasons.push(`marketing cues detected: ${report.hitTerms.slice(0, 2).map((x) => escapeHtml(x)).join(", ")}`);
+    }
+    if (!reasons.length) {
+      return "The page has lending behavior and repayment language, so we recommend a cooling-off check before submission.";
+    }
+    return `We recommend this guidance because ${reasons.join("; ")}.`;
   }
 
   async function submitSchoolEvent(report, answers) {
@@ -552,6 +618,8 @@
       showModal({
         title: "Detailed Risk Items",
         bodyHtml: `
+          <p><strong>Why this guidance</strong></p>
+          <p style="margin:0 0 10px;">${escapeHtml(buildWhyGuidanceText(report))}</p>
           <ul style="margin:0 0 0 18px;">
             <li>Contract amount: <strong>${fmtMoney(report.contract)}</strong></li>
             <li>Upfront fee (pre-deducted): <strong>${fmtMoney(report.upfrontFee)}</strong></li>
@@ -623,15 +691,19 @@
       const eduHtml = (resources.education || [])
         .slice(0, 2)
         .map(
-          (x) =>
-            `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}</li>`
+          (x) => {
+            const link = safeHref(x.url || "");
+            return `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}${link ? `<br/><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open resource</a>` : ""}</li>`;
+          }
         )
         .join("");
       const wellHtml = (resources.wellbeing || [])
         .slice(0, 2)
         .map(
-          (x) =>
-            `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}</li>`
+          (x) => {
+            const link = safeHref(x.url || "");
+            return `<li><strong>${escapeHtml(x.title)}</strong><br/>${escapeHtml(x.description || "")}${link ? `<br/><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open resource</a>` : ""}</li>`;
+          }
         )
         .join("");
       showModal({
