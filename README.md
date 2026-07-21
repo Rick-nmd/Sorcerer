@@ -2,7 +2,7 @@
 
 > A campus-focused risk-intervention prototype that helps students pause, understand potential borrowing risks, and find safer next steps.
 
-[![HackDKU 2026](https://img.shields.io/badge/HackDKU-2026-7C3AED?style=flat-square)](https://github.com/Rick-nmd/Sorcerer)
+[![HackDKU 2026](https://img.shields.io/badge/HackDKU-2026-7C3AED?style=flat-square)](https://github.com/Rick-1091/Sorcerer)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=222)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![Privacy-first](https://img.shields.io/badge/Design-Privacy--first-2E8B57?style=flat-square)](#privacy-by-design)
 
