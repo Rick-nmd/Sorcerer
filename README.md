@@ -1,68 +1,81 @@
-# Sorcerer - Campus Risk MVP+
+# LoanShield
 
-This repository contains the MVP+ implementation plan and starter project structure for a campus anti-predatory-lending product with a "diversion instead of blocking only" strategy.
+> A campus-focused risk-intervention prototype that helps students pause, understand potential borrowing risks, and find safer next steps.
 
-## Product Loop
+[![HackDKU 2026](https://img.shields.io/badge/HackDKU-2026-7C3AED?style=flat-square)](https://github.com/Rick-nmd/Sorcerer)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=222)](https://developer.mozilla.org/docs/Web/JavaScript)
+[![Privacy-first](https://img.shields.io/badge/Design-Privacy--first-2E8B57?style=flat-square)](#privacy-by-design)
 
-`Detect -> Intervene -> Explain -> Risk Tier -> Recommend Legitimate Alternatives`
+**[View live demo](https://loanshield-demo.onrender.com/student)** · **[Open the school console](https://loanshield-demo.onrender.com/console)**
 
-- Work-study channel (campus jobs / partner labor platforms)
-- Licensed finance channel (bank / regulated institutions)
-- School backend receives **event summaries only** (privacy-first)
+## Why LoanShield?
 
-## Repository Structure
+Students can encounter online borrowing offers at moments of financial pressure. LoanShield is designed around a simple principle:
 
-- `apps/student-plugin/` - Student-side detection/intervention client
-- `apps/school-console/` - School risk dashboard UI
-- `services/school-backend/` - Event ingest API and adapter services
-- `contracts/schemas/` - Shared JSON schemas between A/B machines
-- `docs/` - API contract, privacy/ethics, collaboration workflow
+> **Intervention over surveillance.**
 
-## Collaboration Model (Two Machines)
+Rather than merely blocking a page, the prototype creates a cooling-off moment, explains risk in plain language, and directs students toward safer support options.
 
-- Machine A: plugin + recommendation UI + event sender
-- Machine B: backend + school console + external adapter
-- Contract-first: freeze schema and API before feature coding
+## Experience flow
 
-Detailed workflow: `docs/dual-machine-workflow.md`
-Release checklist: `docs/release-readiness.md`
-Production roadmap: `docs/production-integration-roadmap.md`
+`Detect → Pause → Explain → Assess → Redirect`
 
-## Quick Start
+1. **Detect** lending-like form-filling behaviour in the student-side demo.
+2. **Pause** with three reflection questions before a decision is made.
+3. **Explain** repayment and effective-APR-style context in accessible language.
+4. **Assess** the event with a tiered risk model.
+5. **Redirect** students to legitimate alternatives, including campus work-study and regulated finance options.
 
-1. Install dependencies:
-   - `npm install`
-2. Validate schemas:
-   - `npm run check`
-3. Start full demo (recommended):
-   - `npm run demo`
-4. Open school console:
-   - `http://localhost:8787/console` (or the port printed in terminal)
-5. Open student plugin demo:
-   - `http://localhost:5173` (or the port printed in terminal)
-6. Run integrated smoke checks (in another terminal):
-   - `npm run smoke:dev`
+## What is included
 
-## Web Deployment
+| Area | What it does |
+| --- | --- |
+| Student client | Demonstrates detection, a cooling-off flow, and recommendations. |
+| School console | Displays aggregated support events and risk-level summaries. |
+| Shared backend | Receives event summaries through a lightweight Express API. |
+| Product contracts | Keeps the client and backend aligned through shared JSON schemas. |
 
-This project is deployable as a single web service (backend + both frontends served by backend):
+## Privacy by design
 
-- Root entry: `/`
-- Student plugin: `/student`
-- School console: `/console`
-- Health check: `/health`
+- The school-facing flow is designed around **event summaries**, not intrusive browsing records.
+- Student consent and clear explanation are central to the prototype.
+- This is an educational HackDKU prototype, not a lending, credit-scoring, or surveillance product.
 
-### Render (recommended)
+## Run locally
 
-`render.yaml` is included in the repository. After pushing to GitHub:
+```bash
+npm install
+npm run check
+npm run demo
+```
 
-1. Create a new Render Blueprint from this repo.
-2. Render will detect `render.yaml` and provision service `loanshield-demo`.
-3. After deployment, open:
-   - `https://<your-render-domain>/student`
-   - `https://<your-render-domain>/console`
+Then open:
 
-## Scope
+- Student demo: `http://localhost:5173`
+- School console: `http://localhost:8787/console`
 
-See `docs/scope-mvp-plus.md` for MVP+ scope boundaries and done criteria.
-See `docs/defense-presentation-script.md` for the final presentation flow.
+For a quick integration check:
+
+```bash
+npm run smoke:dev
+```
+
+## Project structure
+
+```text
+apps/
+  student-plugin/     # Student-facing detection and intervention demo
+  school-console/     # School support dashboard
+services/
+  school-backend/     # Express API for event summaries
+contracts/schemas/    # Shared client/backend data contracts
+docs/                 # Product scope, ethics, API, demo, and deployment notes
+```
+
+## Hackathon context
+
+Built for **HackDKU 2026 — FINtech Track** by Team Sorcerer. The project focuses on turning a high-stakes financial decision into a more informed and support-oriented experience.
+
+---
+
+*Built as a learning prototype. It does not provide financial advice or make decisions for students.*
